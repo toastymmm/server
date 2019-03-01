@@ -128,18 +128,140 @@
 					}
 				}
 			}
+		},
+		"/listMessages": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "listMessages",
+				"tags": [
+					"/listMessages"
+				],
+				"description": "List all messages.",
+				"parameters": [
+					{
+						"in": "query",
+						"name": "searchInfo",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
 		}
 	},
 	"definitions": {
 		"ObjectID": {
 			"properties": {
 				"_id": {
-					"type": "string"
+					"type": "string",
+					"example": "5c78b456fd1441656500d212"
 				}
 			},
 			"required": [
 				"_id"
 			]
+		},
+		"MessageContents": {
+			"type": "object",
+			"properties": {
+				"feature": {
+					"$ref":"#/definitions/MessageFeature"
+				}
+			},
+			"required": [
+				"feature"
+			]
+		},
+		"MessageList": {
+			"type": "array",
+			"items": {
+				"$ref":"#/definitions/Message"
+			}
+		},
+		"MessageFeature": {
+			"type":"object",
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": ["Feature"]
+				},
+				"properties": {
+					"type": "object",
+					"properties": {
+						"text": {
+							"type": "string",
+							"example": "I am in charge of my life"
+						},
+						"category": {
+							"type": "string",
+							"enum": ["Confidence", "Entrepreneurship", "Forgiveness", "Health"],
+							"example": "Confidence"
+						}
+					},
+					"required": [
+						"text",
+						"category"
+					]
+				},
+				"geometry": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": ["Point"]
+						},
+						"coordinates": {
+							"type":"array",
+							"items": {
+								"type":"number",
+								"minItems": 2,
+								"maxItems": 2,
+								"example": [-81.1997889146089,28.602251226391626]
+							}
+						}
+					},
+					"required": [
+						"type",
+						"coordinates"
+					]
+				}
+			},
+			"required": [
+				"type",
+				"properties",
+				"geometry"
+			]
+		},
+		"Message": {
+			"type":"object",
+			"allOf": [{
+				"$ref":"#/definitions/MessageContents"
+			},{
+				"type":"object",
+				"properties": {
+					"creator": {
+						"$ref": "#/definitions/ObjectID"
+					}
+				},
+				"required": [
+					"creator"
+				]
+			},{
+				"$ref":"#/definitions/ObjectID"
+			}]
 		},
 		"Success": {
 			"properties": {
