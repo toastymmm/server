@@ -1,0 +1,165 @@
+{
+	"swagger": "2.0",
+	"info": {
+		"title": "Message In A Bottle API",
+		"description": "API for storing and retrieving messages",
+		"version": "1.0"
+	},
+	"produces": [
+		"application/json"
+	],
+	"basePath": "/api",
+	"paths": {
+		"/signup": {
+			"post": {
+				"x-swagger-router-controller": "login",
+				"operationId": "signup",
+				"tags": [
+					"/signup"
+				],
+				"description": "Creates a new user",
+				"parameters": [
+					{
+						"name": "userinfo",
+						"in": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"username",
+								"password"
+							],
+							"properties": {
+								"username": {
+									"type": "string"
+								},
+								"password": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request.",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
+		},
+		"/userLogin": {
+			"post": {
+				"x-swagger-router-controller": "login",
+				"operationId": "userLogin",
+				"tags": [
+					"/userLogin"
+				],
+				"description": "Login as an existing user.",
+				"parameters": [
+					{
+						"name": "userinfo",
+						"in": "body",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"required": [
+								"username",
+								"password"
+							],
+							"properties": {
+								"username": {
+									"type": "string",
+									"example": "nik"
+								},
+								"password": {
+									"type": "string",
+									"example": "password"
+								}
+							}
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request.",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
+		},
+		"/userLogout": {
+			"post": {
+				"x-swagger-router-controller": "login",
+				"operationId": "userLogout",
+				"tags": [
+					"/userLogout"
+				],
+				"description": "Logout user.",
+				"parameters": [],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request.",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
+		}
+	},
+	"definitions": {
+		"ObjectID": {
+			"properties": {
+				"_id": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"_id"
+			]
+		},
+		"Success": {
+			"properties": {
+				"message": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"message"
+			]
+		},
+		"Error": {
+			"properties": {
+				"message": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"message"
+			]
+		}
+	}
+}
