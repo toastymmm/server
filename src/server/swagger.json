@@ -129,14 +129,158 @@
 				}
 			}
 		},
-		"/listMessages": {
+		"/messages": {
 			"get": {
 				"x-swagger-router-controller": "messages",
-				"operationId": "listMessages",
+				"operationId": "messages",
 				"tags": [
-					"/listMessages"
+					"/messages"
 				],
-				"description": "List all messages.",
+				"description": "Get all messages near a location.",
+				"parameters": [
+					{
+						"name": "lon",
+						"in": "query",
+						"required": true,
+						"type": "number",
+						"minimum": -180.0,
+						"maximum": 180.0,
+						"default": -81.1997889146089
+					},
+					{
+						"name": "lat",
+						"in": "query",
+						"required": true,
+						"type": "number",
+						"minimum": -90.0,
+						"maximum": 90.0,
+						"default": 28.602251226391626
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
+		},
+		"/message/{id}": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "getMessage",
+				"tags": [
+					"/message"
+				],
+				"description": "Get a message.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return a message object",
+						"schema": {
+							"$ref": "#/definitions/Message"
+						}
+					}
+				}
+			},
+			"patch": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "patchMessage",
+				"tags": [
+					"/message"
+				],
+				"description": "Get a message.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"in": "body",
+						"name": "message",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/Message"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return the patched message object",
+						"schema": {
+							"$ref": "#/definitions/Message"
+						}
+					}
+				}
+			},
+			"delete": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "deleteMessage",
+				"tags": [
+					"/message"
+				],
+				"description": "Get a message.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
+		},
+		"/message": {
+			"post": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "postMessage",
+				"tags": [
+					"/message"
+				],
+				"description": "Create a new message.",
 				"parameters": [
 					{
 						"in": "query",
@@ -153,9 +297,9 @@
 						}
 					},
 					"200": {
-						"description": "return array of message objects",
+						"description": "return the message created",
 						"schema": {
-							"$ref": "#/definitions/MessageList"
+							"$ref": "#/definitions/Message"
 						}
 					}
 				}
@@ -174,11 +318,23 @@
 				"_id"
 			]
 		},
+		"LongLatArray": {
+			"type": "array",
+			"items": {
+				"type": "number",
+				"minItems": 2,
+				"maxItems": 2
+			},
+			"example": [
+				-81.1997889146089,
+				28.602251226391626
+			]
+	},
 		"MessageContents": {
 			"type": "object",
 			"properties": {
 				"feature": {
-					"$ref":"#/definitions/MessageFeature"
+					"$ref": "#/definitions/MessageFeature"
 				}
 			},
 			"required": [
@@ -188,15 +344,17 @@
 		"MessageList": {
 			"type": "array",
 			"items": {
-				"$ref":"#/definitions/Message"
+				"$ref": "#/definitions/Message"
 			}
 		},
 		"MessageFeature": {
-			"type":"object",
+			"type": "object",
 			"properties": {
 				"type": {
 					"type": "string",
-					"enum": ["Feature"]
+					"enum": [
+						"Feature"
+					]
 				},
 				"properties": {
 					"type": "object",
@@ -207,8 +365,29 @@
 						},
 						"category": {
 							"type": "string",
-							"enum": ["Confidence", "Entrepreneurship", "Forgiveness", "Health"],
+							"enum": [
+								"Confidence",
+								"Entrepreneurship",
+								"Forgiveness",
+								"Health",
+								"Success",
+								"Self-worth",
+								"Productivity",
+								"Challenges",
+								"Money",
+								"Love",
+								"Leadership",
+								"Happiness",
+								"Gratitude",
+								"Breaking Bad Habits",
+								"General"
+							],
 							"example": "Confidence"
+						},
+						"date": {
+							"type": "string",
+							"format": "date",
+							"example": "2019-03-04"
 						}
 					},
 					"required": [
@@ -221,16 +400,12 @@
 					"properties": {
 						"type": {
 							"type": "string",
-							"enum": ["Point"]
+							"enum": [
+								"Point"
+							]
 						},
 						"coordinates": {
-							"type":"array",
-							"items": {
-								"type":"number",
-								"minItems": 2,
-								"maxItems": 2,
-								"example": [-81.1997889146089,28.602251226391626]
-							}
+							"$ref": "#/definitions/LongLatArray"
 						}
 					},
 					"required": [
@@ -246,22 +421,26 @@
 			]
 		},
 		"Message": {
-			"type":"object",
-			"allOf": [{
-				"$ref":"#/definitions/MessageContents"
-			},{
-				"type":"object",
-				"properties": {
-					"creator": {
-						"$ref": "#/definitions/ObjectID"
-					}
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/definitions/MessageContents"
 				},
-				"required": [
-					"creator"
-				]
-			},{
-				"$ref":"#/definitions/ObjectID"
-			}]
+				{
+					"type": "object",
+					"properties": {
+						"creator": {
+							"$ref": "#/definitions/ObjectID"
+						}
+					},
+					"required": [
+						"creator"
+					]
+				},
+				{
+					"$ref": "#/definitions/ObjectID"
+				}
+			]
 		},
 		"Success": {
 			"properties": {
