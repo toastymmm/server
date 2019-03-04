@@ -15,7 +15,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "signup",
 				"tags": [
-					"login"
+					"users"
 				],
 				"description": "Creates a new user",
 				"parameters": [
@@ -61,7 +61,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "userLogin",
 				"tags": [
-					"login"
+					"users"
 				],
 				"description": "Login as an existing user.",
 				"parameters": [
@@ -109,7 +109,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "userLogout",
 				"tags": [
-					"login"
+					"users"
 				],
 				"description": "Logout user.",
 				"parameters": [],
@@ -122,6 +122,71 @@
 					},
 					"200": {
 						"description": "Successful request.",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
+		},
+		"/users": {
+			"get": {
+				"x-swagger-router-controller": "login",
+				"operationId": "users",
+				"tags": [
+					"users"
+				],
+				"description": "Get a list of all users",
+				"parameters": [],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of user objects",
+						"schema": {
+							"$ref": "#/definitions/UserList"
+						}
+					}
+				}
+			}
+		},
+		"/user/{userId}": {
+			"patch": {
+				"x-swagger-router-controller": "login",
+				"operationId": "patchUser",
+				"tags": [
+					"users"
+				],
+				"description": "Get a list of all users",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"in": "body",
+						"name": "user",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/User"
+						}
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
 						"schema": {
 							"$ref": "#/definitions/Success"
 						}
@@ -155,6 +220,62 @@
 						"minimum": -90.0,
 						"maximum": 90.0,
 						"default": 28.602251226391626
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
+		},
+		"/messages/reported": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "messagesReported",
+				"tags": [
+					"messages"
+				],
+				"description": "Get all reported messages.",
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
+		},
+		"/messages/{userId}": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "messagesReported",
+				"tags": [
+					"messages"
+				],
+				"description": "Get all reported messages.",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"type": "string"
 					}
 				],
 				"responses": {
@@ -417,7 +538,69 @@
 				-81.1997889146089,
 				28.602251226391626
 			]
-	},
+		},
+		"UserInfo": {
+			"type": "object",
+			"properties": {
+				"email": {
+					"type": "string"
+				},
+				"banned": {
+					"type": "boolean"
+				},
+				"warned": {
+					"type": "boolean"
+				},
+				"numWarnings": {
+					"type": "number"
+				},
+				"numReports": {
+					"type": "number"
+				},
+				"messageCreatedCount": {
+					"type": "number"
+				},
+				"messageDiscoveredCount": {
+					"type": "number"
+				},
+				"accountCreated": {
+					"type": "string",
+					"format": "date"
+				},
+				"lastLogin": {
+					"type": "number",
+					"format": "date"
+				}
+			},
+			"required": [
+				"email",
+				"banned",
+				"warned",
+				"numReports",
+				"numWarnings",
+				"accountCreated",
+				"lastLogin",
+				"messageCreatedCount",
+				"messageDiscoveredCount"
+			]
+		},
+		"UserList": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/User"
+			}
+		},
+		"User": {
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/definitions/UserInfo"
+				},
+				{
+					"$ref": "#/definitions/ObjectID"
+				}
+			]
+		},
 		"MessageContents": {
 			"type": "object",
 			"properties": {
@@ -476,11 +659,17 @@
 							"type": "string",
 							"format": "date",
 							"example": "2019-03-04"
+						},
+						"numReports": {
+							"type": "number",
+							"example": 0
 						}
 					},
 					"required": [
 						"text",
-						"category"
+						"category",
+						"date",
+						"numReports"
 					]
 				},
 				"geometry": {
