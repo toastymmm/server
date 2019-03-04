@@ -15,7 +15,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "signup",
 				"tags": [
-					"/signup"
+					"login"
 				],
 				"description": "Creates a new user",
 				"parameters": [
@@ -61,7 +61,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "userLogin",
 				"tags": [
-					"/userLogin"
+					"login"
 				],
 				"description": "Login as an existing user.",
 				"parameters": [
@@ -109,7 +109,7 @@
 				"x-swagger-router-controller": "login",
 				"operationId": "userLogout",
 				"tags": [
-					"/userLogout"
+					"login"
 				],
 				"description": "Logout user.",
 				"parameters": [],
@@ -134,7 +134,7 @@
 				"x-swagger-router-controller": "messages",
 				"operationId": "messages",
 				"tags": [
-					"/messages"
+					"messages"
 				],
 				"description": "Get all messages near a location.",
 				"parameters": [
@@ -178,7 +178,7 @@
 				"x-swagger-router-controller": "messages",
 				"operationId": "getMessage",
 				"tags": [
-					"/message"
+					"message"
 				],
 				"description": "Get a message.",
 				"parameters": [
@@ -208,7 +208,7 @@
 				"x-swagger-router-controller": "messages",
 				"operationId": "patchMessage",
 				"tags": [
-					"/message"
+					"message"
 				],
 				"description": "Get a message.",
 				"parameters": [
@@ -246,7 +246,7 @@
 				"x-swagger-router-controller": "messages",
 				"operationId": "deleteMessage",
 				"tags": [
-					"/message"
+					"message"
 				],
 				"description": "Get a message.",
 				"parameters": [
@@ -278,15 +278,17 @@
 				"x-swagger-router-controller": "messages",
 				"operationId": "postMessage",
 				"tags": [
-					"/message"
+					"message"
 				],
 				"description": "Create a new message.",
 				"parameters": [
 					{
-						"in": "query",
-						"name": "searchInfo",
+						"in": "body",
+						"name": "message",
 						"required": true,
-						"type": "string"
+						"schema": {
+							"$ref": "#/definitions/MessageContents"
+						}
 					}
 				],
 				"responses": {
@@ -300,6 +302,92 @@
 						"description": "return the message created",
 						"schema": {
 							"$ref": "#/definitions/Message"
+						}
+					}
+				}
+			}
+		},
+		"/favorites": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "favorites",
+				"tags": [
+					"favorites"
+				],
+				"description": "Get favorite messages for logged in user.",
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
+		},
+		"/favorites/{id}": {
+			"delete": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "deleteFavorite",
+				"tags": [
+					"favorite"
+				],
+				"description": "Delete a favorite.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			},
+			"post": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "postMessage",
+				"tags": [
+					"favorite"
+				],
+				"description": "Create a new favorite.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
 						}
 					}
 				}
