@@ -63,7 +63,7 @@
 				"tags": [
 					"users"
 				],
-				"description": "Login as an existing user.",
+				"description": "Login as an existing user. This API creates two cookies as a result of successful login: sid and username. sid is a typical session token that the server uses to store session information. username is a cookie provided for the convenience or clients to identify their current user name.",
 				"parameters": [
 					{
 						"name": "userinfo",
@@ -269,7 +269,7 @@
 				"tags": [
 					"messages"
 				],
-				"description": "Get all reported messages.",
+				"description": "Get all messages created by a particular user.",
 				"parameters": [
 					{
 						"name": "userId",
@@ -331,7 +331,7 @@
 				"tags": [
 					"message"
 				],
-				"description": "Get a message.",
+				"description": "Update a message's properties.",
 				"parameters": [
 					{
 						"in": "path",
@@ -369,7 +369,7 @@
 				"tags": [
 					"message"
 				],
-				"description": "Get a message.",
+				"description": "Delete a message.",
 				"parameters": [
 					{
 						"in": "path",
@@ -568,7 +568,7 @@
 					"format": "date"
 				},
 				"lastLogin": {
-					"type": "number",
+					"type": "string",
 					"format": "date"
 				}
 			},
