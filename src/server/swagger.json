@@ -161,7 +161,7 @@
 				"tags": [
 					"users"
 				],
-				"description": "Get a list of all users",
+				"description": "Update a user with whatever properties you want. You can use this endpoint to warn or ban a user as well.",
 				"parameters": [
 					{
 						"in": "path",
