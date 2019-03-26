@@ -51,12 +51,15 @@ module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Req
         return
     }
 
+    var rangeInMeters = 100
+    const rangeInDegrees = turf.lengthToDegrees(rangeInMeters, "meters")
+
     //capture search in variable
     const lon = req.swagger.params.lon.value;
     const lat = req.swagger.params.lat.value;
     //if there is a search, match with database docs that belong to that user and put them in array.
     //returned items must belong to the user AND match what was searched in any field belonging to that doc
-    db.messages.find({}).toArray().then((data) => {
+    db.messages.find({'feature.geometry': {$geoWithin: { $centerSphere: [ [ lon, lat ], rangeInDegrees ]}}}).toArray().then((data) => {
         if (data) {
             res.status(OK)
             res.send(JSON.stringify(data))

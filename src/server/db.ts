@@ -15,7 +15,9 @@ namespace Database {
 
     export interface Message {
         text:string,
-        category: string
+        category: string,
+        date: Date,
+        numReports: number
     }
     
     export interface MessageFeature {

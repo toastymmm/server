@@ -570,6 +570,9 @@
 				"lastLogin": {
 					"type": "string",
 					"format": "date"
+				},
+				"admin": {
+					"type": "boolean"
 				}
 			},
 			"required": [
@@ -656,9 +659,7 @@
 							"example": "Confidence"
 						},
 						"date": {
-							"type": "string",
-							"format": "date",
-							"example": "2019-03-04"
+							"type": "string"
 						},
 						"numReports": {
 							"type": "number",
