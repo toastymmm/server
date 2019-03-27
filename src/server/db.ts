@@ -19,7 +19,7 @@ namespace Database {
     }
     
     export interface MessageFeature {
-        _id: mongodb.ObjectID
+        _id?: mongodb.ObjectID
         feature: turf.helpers.Feature<turf.helpers.Point, Message>
         creator: mongodb.ObjectID
     }
