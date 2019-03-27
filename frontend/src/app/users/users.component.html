@@ -1,0 +1,36 @@
+<h1>Users</h1>
+<clr-datagrid>
+
+  <clr-dg-column [clrDgField]="'username'">Username</clr-dg-column>
+  <clr-dg-column [clrDgField]="'created'">Creation date</clr-dg-column>
+  <clr-dg-column [clrDgField]="'lastLogin'">Last login</clr-dg-column>
+  <clr-dg-column [clrDgField]="'messagesFound'">Messages found</clr-dg-column>
+  <clr-dg-column [clrDgField]="'messagesCreated'">Messages created</clr-dg-column>
+  <clr-dg-column [clrDgField]="'warningCount'">Warnings</clr-dg-column>
+  <clr-dg-column [clrDgField]="'reportCount'">Reports</clr-dg-column>
+
+  <clr-dg-placeholder>We couldn't find any users!</clr-dg-placeholder>
+
+  <clr-dg-row *clrDgItems="let user of users">
+    <clr-dg-action-overflow>
+      <button (click)="showMessages(user)" class="action-item">View Messages</button>
+      <button (click)="warnUser(user)" class="action-item">Warn</button>
+      <button (click)="banUser(user)" class="action-item">Ban</button>
+    </clr-dg-action-overflow>
+    <clr-dg-cell>{{user.username}}</clr-dg-cell>
+    <clr-dg-cell>{{user.created | date}}</clr-dg-cell>
+    <clr-dg-cell>{{user.lastLogin | date}}</clr-dg-cell>
+    <clr-dg-cell>{{user.messagesFound}}</clr-dg-cell>
+    <clr-dg-cell>{{user.messagesCreated}}</clr-dg-cell>
+    <clr-dg-cell>{{user.warningCount}}</clr-dg-cell>
+    <clr-dg-cell>{{user.reportCount}}</clr-dg-cell>
+  </clr-dg-row>
+
+  <clr-dg-footer>
+    <clr-dg-pagination #pagination [clrDgPageSize]="25">
+      <clr-dg-page-size [clrPageSizeOptions]="[10,25,50,100]">Users per page</clr-dg-page-size>
+      {{pagination.firstItem + 1}} - {{pagination.lastItem + 1}}
+      of {{pagination.totalItems}} users
+    </clr-dg-pagination>
+  </clr-dg-footer>
+</clr-datagrid>

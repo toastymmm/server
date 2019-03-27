@@ -659,7 +659,9 @@
 							"example": "Confidence"
 						},
 						"date": {
-							"type": "string"
+							"type": "string",
+							"format": "date-time",
+							"example": "2019-03-27T00:28:19.958Z"
 						},
 						"numReports": {
 							"type": "number",

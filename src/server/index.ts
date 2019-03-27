@@ -4,6 +4,7 @@ import swaggerTools = require('swagger-tools')
 import cookieParser = require('cookie-parser')
 import db = require('./db')
 import api = require('./api')
+import path = require('path')
 
 const session = require('express-session')
 
@@ -54,7 +55,10 @@ app.use('/', (req, res, next) => {
 
     next()
 })
-app.use('/', express.static('dist'))
+
+const staticContent = path.join(__dirname, '..', '..', 'frontend', 'dist', 'web')
+console.log(`Serving static content from ${staticContent}`)
+app.use('/', express.static(staticContent))
 
 // Initialize the Swagger middleware
 swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {

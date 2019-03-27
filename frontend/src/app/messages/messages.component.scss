@@ -1,0 +1,14 @@
+clr-dg-cell button {
+  margin: -10px;
+  margin-left: 1em;
+}
+
+.messages-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.text-col {
+  max-width: 65%;
+}

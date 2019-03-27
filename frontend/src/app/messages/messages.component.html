@@ -1,0 +1,53 @@
+<div class="messages-header">
+  <div class="messages-header-item">
+    <h1>Messages</h1>
+  </div>
+  <div class="messages-header-item">
+    <div class="btn-group">
+      <div class="radio btn" (click)="messagesService.clearFilter()">
+        <input type="radio" name="msgs-radios" id="msgs-radio-1" checked>
+        <label for="msgs-radio-1">All Messages</label>
+      </div>
+      <div class="radio btn" (click)="messagesService.filterMessagesByReported()">
+        <input type="radio" name="msgs-radios" id="msgs-radio-2">
+        <label for="msgs-radio-2">Reported</label>
+      </div>
+      <div class="radio btn" *ngIf="lastFilteredUser" (click)="messagesService.filterMessagesByUser(lastFilteredUser)">
+        <input type="radio" name="msgs-radios" id="msgs-radio-3" [checked]="lastFilteredUser">
+        <label for="msgs-radio-3">
+          <span>By "{{lastFilteredUser.username}}" </span>
+          <clr-icon shape="times" (click)="clearFilter()"></clr-icon>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<clr-datagrid>
+
+  <clr-dg-column class="text-col" [clrDgField]="'text'">Message</clr-dg-column>
+  <clr-dg-column [clrDgField]="'category'">Category</clr-dg-column>
+  <clr-dg-column [clrDgField]="'date'">Date</clr-dg-column>
+  <clr-dg-column [clrDgField]="'numReports'">Reports</clr-dg-column>
+
+  <clr-dg-placeholder>We couldn't find any messages!</clr-dg-placeholder>
+
+  <clr-dg-row *clrDgItems="let msg of messages">
+    <clr-dg-action-overflow>
+      <button (click)="deleteMessage(msg)" class="action-item">Delete Message</button>
+      <button (click)="editMessage(msg)" class="action-item">Edit Message</button>
+      <button *ngIf="msg.numReports > 0" (click)="removeReports(msg)" class="action-item">Allow Message</button>
+    </clr-dg-action-overflow>
+    <clr-dg-cell class="text-col">{{msg.text |ellipsis:200}}</clr-dg-cell>
+    <clr-dg-cell>{{msg.category}}</clr-dg-cell>
+    <clr-dg-cell>{{msg.date | date:'medium'}}</clr-dg-cell>
+    <clr-dg-cell>{{msg.numReports}}</clr-dg-cell>
+  </clr-dg-row>
+
+  <clr-dg-footer>
+    <clr-dg-pagination #pagination [clrDgPageSize]="25">
+      <clr-dg-page-size [clrPageSizeOptions]="[10,25,50,100]">Messages per page</clr-dg-page-size>
+      {{pagination.firstItem + 1}} - {{pagination.lastItem + 1}}
+      of {{pagination.totalItems}} messages
+    </clr-dg-pagination>
+  </clr-dg-footer>
+</clr-datagrid>
