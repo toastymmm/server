@@ -10,7 +10,8 @@ namespace Database {
     export interface UserInfo {
         _id: mongodb.ObjectID
         username: string,
-        password: string
+        password: string,
+        admin: boolean
     }
 
     export interface Message {

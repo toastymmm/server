@@ -131,6 +131,23 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
     //capture search in variable
     const id = req.swagger.params.id.value;
 
+    db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
+        if (data) {
+            res.status(OK)
+            res.send(JSON.stringify(data))
+            res.end()
+        }
+        else {
+            res.status(NotFound)
+            res.send(JSON.stringify({ message: `Message does not exist for ${id}` }, null, 2))
+            res.end()
+        }
+    }).catch((err) => {
+        res.status(InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        res.end()
+    })
+
     res.status(InternalServerError)
     res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
     res.end()
