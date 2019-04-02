@@ -11,6 +11,7 @@ import mongodb = require('mongodb')
 
 const OK = 200
 const BadRequest = 400
+const NotFound = 404
 const InternalServerError = 500
 
 const inspect = (input: any) => util.inspect(input, false, Infinity, false)
@@ -99,15 +100,15 @@ module.exports.getMessage = function (req: api.Request & swaggerTools.Swagger20R
     const id = req.swagger.params.id.value;
     //if there is a search, match with database docs that belong to that user and put them in array.
     //returned items must belong to the user AND match what was searched in any field belonging to that doc
-    db.messages.find({}).toArray().then((data) => {
+    db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
             res.status(OK)
             res.send(JSON.stringify(data))
             res.end()
         }
         else {
-            res.status(OK)
-            res.send(JSON.stringify([], null, 2))
+            res.status(NotFound)
+            res.send(JSON.stringify({ message: `Message does not exist for ${id}` }, null, 2))
             res.end()
         }
     }).catch((err) => {
