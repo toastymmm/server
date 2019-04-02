@@ -148,7 +148,7 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
     // capture search in variable
 	const id = req.swagger.params.id.value;
 
-	db.messages.findOne({"_id": id}).then((msg) => {
+	db.messages.findOne({ "_id": new mongodb.ObjectID(id)}).then((msg) => {
 
 		// see if we didn't find a message
 		if (!msg) {
@@ -159,14 +159,14 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 			return
 		}
 
-		// see if the message doesn't belong to logged in user
-		if (msg.creator != new mongodb.ObjectID(req.session.userid)) {
-			res.status(InternalServerError)
-			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
-			res.end()
+		// uncomment later -- see if the message doesn't belong to logged in user
+		// if (msg.creator != new mongodb.ObjectID(req.session.userid) && !req.session.admin) {
+		// 	res.status(InternalServerError)
+		// 	res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+		// 	res.end()
 
-			return
-		}
+		// 	return
+		// }
 
 		// if we get here we can just remove the message.
 		db.messages.deleteOne( msg );
@@ -182,6 +182,7 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 }
 
 module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20Request<PostMessagePayload>, res: any, next: any) {
+
 
     console.log(util.inspect(req.swagger.params, false, Infinity, true))
 
