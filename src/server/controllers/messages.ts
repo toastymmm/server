@@ -145,12 +145,40 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
         return
     }
 
-    //capture search in variable
-    const id = req.swagger.params.id.value;
+    // capture search in variable
+	const id = req.swagger.params.id.value;
 
-    res.status(InternalServerError)
-    res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
-    res.end()
+	db.messages.findOne({"_id": id}).then((msg) => {
+
+		// see if we didn't find a message
+		if (!msg) {
+			res.status(InternalServerError)
+			res.send(JSON.stringify({ message: inspect(new Error("Message not found")) }, null, 2))
+			res.end()
+
+			return
+		}
+
+		// see if the message doesn't belong to logged in user
+		if (msg.creator != new mongodb.ObjectID(req.session.userid)) {
+			res.status(InternalServerError)
+			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+			res.end()
+
+			return
+		}
+
+		// if we get here we can just remove the message.
+		db.messages.deleteOne( msg );
+
+		res.status(OK)
+		res.send(JSON.stringify([], null, 2))
+		res.end()
+	})
+
+    // res.status(InternalServerError)
+    // res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
+    // res.end()
 }
 
 module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20Request<PostMessagePayload>, res: any, next: any) {
@@ -179,7 +207,7 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
                 res.send(JSON.stringify(newObject))
                 res.end()
             })
-            
+
         }
         else {
             res.status(InternalServerError)
