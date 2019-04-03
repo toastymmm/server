@@ -265,7 +265,7 @@
 		"/messages/{userId}": {
 			"get": {
 				"x-swagger-router-controller": "messages",
-				"operationId": "messagesReported",
+				"operationId": "messagesUserId",
 				"tags": [
 					"messages"
 				],

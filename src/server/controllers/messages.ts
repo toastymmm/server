@@ -50,6 +50,11 @@ interface PostMessagePayload {
     [paramName: string]: swaggerTools.SwaggerRequestParameter<MessageFeature> | undefined;
 }
 
+interface MessagesUserIdPayload {
+	userId: swaggerTools.SwaggerRequestParameter<string>,
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
 module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Request<MessagesPayload>, res: any, next: any) {
 
     console.log(util.inspect(req.swagger.params, false, Infinity, true))
@@ -84,6 +89,33 @@ module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Req
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         res.end()
     })
+}
+
+module.exports.messagesUserId = function (req: api.Request & swaggerTools.Swagger20Request<MessagesUserIdPayload>, res: any, next: any) {
+	console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+	res.setHeader('Content-Type', 'application/json')
+
+	if (!req.session) {
+		return
+	}
+
+	const userId = req.swagger.params.userId.value;
+	db.messages.find({"creator" : new mongodb.ObjectID(userId)}).toArray().then((data) => {
+		if (data) {
+			res.status(OK)
+			res.send(JSON.stringify(data))
+			res.end()
+		} else {
+			res.status(OK)
+			res.send(JSON.stringify([], null, 2))
+			res.end()
+		}
+	}).catch((err) => {
+		res.status(InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+		res.end()
+	})
 }
 
 module.exports.getMessage = function (req: api.Request & swaggerTools.Swagger20Request<GetMessagePayload>, res: any, next: any) {
@@ -163,15 +195,49 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
         return
     }
 
-    //capture search in variable
-    const id = req.swagger.params.id.value;
+    // capture search in variable
+	const id = req.swagger.params.id.value;
 
-    res.status(InternalServerError)
-    res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
-    res.end()
+	db.messages.findOne({ "_id": new mongodb.ObjectID(id)}).then((msg) => {
+
+		// see if we didn't find a message
+		if (!msg) {
+			res.status(InternalServerError)
+			res.send(JSON.stringify({ message: inspect(new Error("Message not found")) }, null, 2))
+			res.end()
+
+			return
+		}
+
+		console.log("Logged in user: " + req.session.username + " " + req.session.admin + " " + req.session.userid);
+		console.log("Message belongs to user: " + msg.creator);
+
+		const my_user_id = ""+req.session.userid
+		const owner_id = ""+msg.creator
+
+		console.log("Does the user logged in own the message? " + (my_user_id == owner_id));
+
+		/* delete message if we own it or if we are admin */
+		if (owner_id == my_user_id || req.session.admin) {
+			db.messages.deleteOne( msg );
+
+			res.status(OK)
+			res.send(JSON.stringify([], null, 2))
+			res.end()
+		} else {
+			res.status(InternalServerError)
+			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+			res.end()
+		}
+	})
+
+    // res.status(InternalServerError)
+    // res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
+    // res.end()
 }
 
 module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20Request<PostMessagePayload>, res: any, next: any) {
+
 
     console.log(util.inspect(req.swagger.params, false, Infinity, true))
 
@@ -197,7 +263,7 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
                 res.send(JSON.stringify(newObject))
                 res.end()
             })
-            
+
         }
         else {
             res.status(InternalServerError)
