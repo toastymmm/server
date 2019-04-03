@@ -211,14 +211,10 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
 		console.log("Logged in user: " + req.session.username + " " + req.session.admin + " " + req.session.userid);
 		console.log("Message belongs to user: " + msg.creator);
-
-		const my_user_id = ""+req.session.userid
-		const owner_id = ""+msg.creator
-
-		console.log("Does the user logged in own the message? " + (my_user_id == owner_id));
+		console.log("Does the user logged in own the message? " + msg.creator.equals(req.session.userid));
 
 		/* delete message if we own it or if we are admin */
-		if (owner_id == my_user_id || req.session.admin) {
+		if (msg.creator.equals(req.session.userid) || req.session.admin) {
 			db.messages.deleteOne( msg );
 
 			res.status(OK)
