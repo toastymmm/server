@@ -50,6 +50,11 @@ interface PostMessagePayload {
     [paramName: string]: swaggerTools.SwaggerRequestParameter<MessageFeature> | undefined;
 }
 
+interface MessagesUserIdPayload {
+	userId: swaggerTools.SwaggerRequestParameter<string>,
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
 module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Request<MessagesPayload>, res: any, next: any) {
 
     console.log(util.inspect(req.swagger.params, false, Infinity, true))
@@ -84,6 +89,33 @@ module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Req
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         res.end()
     })
+}
+
+module.exports.messagesUserId = function (req: api.Request & swaggerTools.Swagger20Request<MessagesUserIdPayload>, res: any, next: any) {
+	console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+	res.setHeader('Content-Type', 'application/json')
+
+	if (!req.session) {
+		return
+	}
+
+	const userId = req.swagger.params.userId.value;
+	db.messages.find({"creator" : new mongodb.ObjectID(userId)}).toArray().then((data) => {
+		if (data) {
+			res.status(OK)
+			res.send(JSON.stringify(data))
+			res.end()
+		} else {
+			res.status(OK)
+			res.send(JSON.stringify([], null, 2))
+			res.end()
+		}
+	}).catch((err) => {
+		res.status(InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+		res.end()
+	})
 }
 
 module.exports.getMessage = function (req: api.Request & swaggerTools.Swagger20Request<GetMessagePayload>, res: any, next: any) {
@@ -197,7 +229,7 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
                 res.send(JSON.stringify(newObject))
                 res.end()
             })
-            
+
         }
         else {
             res.status(InternalServerError)
