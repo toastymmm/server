@@ -210,13 +210,13 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 		}
 
 		// uncomment later -- see if the message doesn't belong to logged in user
-		// if (msg.creator != new mongodb.ObjectID(req.session.userid) && !req.session.admin) {
-		// 	res.status(InternalServerError)
-		// 	res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
-		// 	res.end()
+		if (msg.creator != new mongodb.ObjectID(req.session.userid) && !req.session.admin) {
+			res.status(InternalServerError)
+			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+			res.end()
 
-		// 	return
-		// }
+			return
+		}
 
 		// if we get here we can just remove the message.
 		db.messages.deleteOne( msg );
