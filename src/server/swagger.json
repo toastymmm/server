@@ -12,7 +12,7 @@
 	"paths": {
 		"/signup": {
 			"post": {
-				"x-swagger-router-controller": "login",
+				"x-swagger-router-controller": "users",
 				"operationId": "signup",
 				"tags": [
 					"users"
@@ -58,7 +58,7 @@
 		},
 		"/userLogin": {
 			"post": {
-				"x-swagger-router-controller": "login",
+				"x-swagger-router-controller": "users",
 				"operationId": "userLogin",
 				"tags": [
 					"users"
@@ -106,7 +106,7 @@
 		},
 		"/userLogout": {
 			"post": {
-				"x-swagger-router-controller": "login",
+				"x-swagger-router-controller": "users",
 				"operationId": "userLogout",
 				"tags": [
 					"users"
@@ -131,7 +131,7 @@
 		},
 		"/users": {
 			"get": {
-				"x-swagger-router-controller": "login",
+				"x-swagger-router-controller": "users",
 				"operationId": "users",
 				"tags": [
 					"users"
@@ -156,7 +156,7 @@
 		},
 		"/user/{userId}": {
 			"patch": {
-				"x-swagger-router-controller": "login",
+				"x-swagger-router-controller": "users",
 				"operationId": "patchUser",
 				"tags": [
 					"users"

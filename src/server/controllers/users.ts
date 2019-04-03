@@ -18,6 +18,11 @@ interface SignupPayload {
     [paramName: string]: swaggerTools.SwaggerRequestParameter<UserInfo> | undefined;
 }
 
+// Make sure this matches the Swagger.json body parameter for the /users API
+interface UsersPayload {
+    [paramName: string]: undefined;
+}
+
 module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Request<SignupPayload>, res: any, next: any) {
     // print out the params
     console.log(inspect(req.swagger.params))
@@ -139,4 +144,32 @@ module.exports.userLogout = function (req: any, res: any, next: any) {
     res.status(OK)
     res.send(JSON.stringify({ message: `Logged out user: ${username} ${userid}` }, null, 2))
     res.end()
+}
+
+module.exports.users = function (req: api.Request & swaggerTools.Swagger20Request<UsersPayload>, res: any, next: any) {
+
+    console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+    res.setHeader('Content-Type', 'application/json')
+
+    if (!req.session) {
+        return
+    }
+
+    db.users.find({}).toArray().then((data) => {
+        if (data) {
+            res.status(OK)
+            res.send(JSON.stringify(data))
+            res.end()
+        }
+        else {
+            res.status(OK)
+            res.send(JSON.stringify([], null, 2))
+            res.end()
+        }
+    }).catch((err) => {
+        res.status(InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        res.end()
+    })
 }
