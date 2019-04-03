@@ -192,7 +192,9 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        return
+        res.status(InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+        return res.end()
     }
 
     // capture search in variable
@@ -204,9 +206,7 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 		if (!msg) {
 			res.status(InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message not found")) }, null, 2))
-			res.end()
-
-			return
+			return res.end()
 		}
 
 		/* delete message if we own it or if we are admin */
@@ -215,17 +215,17 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
 			res.status(OK)
 			res.send(JSON.stringify([], null, 2))
-			res.end()
+			return res.end()
 		} else {
 			res.status(InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
-			res.end()
+			return res.end()
 		}
-	})
-
-    // res.status(InternalServerError)
-    // res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
-    // res.end()
+	}).catch((err) => {
+        res.status(InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        return res.end()
+    })
 }
 
 module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20Request<PostMessagePayload>, res: any, next: any) {
