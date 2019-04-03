@@ -209,21 +209,26 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 			return
 		}
 
-		// uncomment later -- see if the message doesn't belong to logged in user
-		if (msg.creator != new mongodb.ObjectID(req.session.userid) && !req.session.admin) {
+		console.log("Logged in user: " + req.session.username + " " + req.session.admin + " " + req.session.userid);
+		console.log("Message belongs to user: " + msg.creator);
+
+		const my_user_id = ""+req.session.userid
+		const owner_id = ""+msg.creator
+
+		console.log("Does the user logged in own the message? " + (my_user_id == owner_id));
+
+		/* delete message if we own it or if we are admin */
+		if (owner_id == my_user_id || req.session.admin) {
+			db.messages.deleteOne( msg );
+
+			res.status(OK)
+			res.send(JSON.stringify([], null, 2))
+			res.end()
+		} else {
 			res.status(InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
 			res.end()
-
-			return
 		}
-
-		// if we get here we can just remove the message.
-		db.messages.deleteOne( msg );
-
-		res.status(OK)
-		res.send(JSON.stringify([], null, 2))
-		res.end()
 	})
 
     // res.status(InternalServerError)
