@@ -11,7 +11,16 @@ namespace Database {
         _id: mongodb.ObjectID
         username: string,
         password: string,
-        admin: boolean
+        admin: boolean,
+        email: string,
+        banned: boolean,
+        warned: boolean,
+        numReports: number,
+        numWarnings: number,
+        messageCreatedCount: number,
+        messageDiscoveredCount: number,
+        accountCreated: string,
+        lastLogin: string
     }
 
     export interface Message {

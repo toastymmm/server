@@ -48,12 +48,20 @@ app.use((req, res, next) => {
 });
 
 app.use('/', (req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*")
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+
     var result = req.url.match(/^\/server.*$/)
     if (result) {
         return res.status(403).end('403 Forbidden')
     }
 
     next()
+})
+
+app.options('/*', (req, res, next) => {
+    res.status(200)
+    res.end()
 })
 
 const staticContent = path.join(__dirname, '..', '..', 'frontend', 'dist', 'web')

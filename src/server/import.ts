@@ -5,7 +5,7 @@ import Message = db.Message
 import Feature = turf.helpers.Feature
 import Point = turf.helpers.Point
 
-const users = [
+const users:any = [
     {
         "_id": new mongodb.ObjectID(),
         "username": "nik",
@@ -175,6 +175,15 @@ async function go() {
     if (await db.db.listCollections({ name: 'messages' }).hasNext())
 		await db.messages.drop()
     await Promise.all(users.map(async user => {
+		user.email = "your_name@example.com"
+		user.banned = false
+		user.warned = false
+		user.numReports = 0
+		user.numWarnings = 0
+		user.messageCreatedCount = 0
+		user.messageDiscoveredCount = 0
+		user.accountCreated = new Date().toISOString()
+		user.lastLogin = new Date().toISOString()
         return await db.users.insertOne(user)
     }))
     const points = turf.randomPoint(messages.length, {bbox: [-81.20022743940353,28.600748350532783, -81.19752377271652, 28.602848915574334]})

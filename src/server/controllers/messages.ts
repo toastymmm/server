@@ -9,11 +9,6 @@ import api = require('../api')
 import turf = require('@turf/turf')
 import mongodb = require('mongodb')
 
-const OK = 200
-const BadRequest = 400
-const NotFound = 404
-const InternalServerError = 500
-
 const inspect = (input: any) => util.inspect(input, false, Infinity, false)
 
 // Make sure this matches the Swagger.json body parameter for the /signup API
@@ -62,7 +57,9 @@ module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Req
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        return
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
     }
 
     var rangeInMeters = 100
@@ -75,17 +72,17 @@ module.exports.messages = function (req: api.Request & swaggerTools.Swagger20Req
     //returned items must belong to the user AND match what was searched in any field belonging to that doc
     db.messages.find({'feature.geometry': {$geoWithin: { $centerSphere: [ [ lon, lat ], rangeInDegrees ]}}}).toArray().then((data) => {
         if (data) {
-            res.status(OK)
+            res.status(api.OK)
             res.send(JSON.stringify(data))
             res.end()
         }
         else {
-            res.status(OK)
+            res.status(api.OK)
             res.send(JSON.stringify([], null, 2))
             res.end()
         }
     }).catch((err) => {
-        res.status(InternalServerError)
+        res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         res.end()
     })
@@ -96,23 +93,32 @@ module.exports.messagesUserId = function (req: api.Request & swaggerTools.Swagge
 
 	res.setHeader('Content-Type', 'application/json')
 
-	if (!req.session) {
-		return
-	}
+    if (!req.session) {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
+    }
 
 	const userId = req.swagger.params.userId.value;
+
+    if (req.session.userid != userId && !req.session.admin) {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("You must be logged in as the user for which you are requesting messages or an admin.")) }, null, 2))
+        return res.end()
+    }
+
 	db.messages.find({"creator" : new mongodb.ObjectID(userId)}).toArray().then((data) => {
 		if (data) {
-			res.status(OK)
+			res.status(api.OK)
 			res.send(JSON.stringify(data))
 			res.end()
 		} else {
-			res.status(OK)
+			res.status(api.OK)
 			res.send(JSON.stringify([], null, 2))
 			res.end()
 		}
 	}).catch((err) => {
-		res.status(InternalServerError)
+		res.status(api.InternalServerError)
 		res.send(JSON.stringify({ message: inspect(err) }, null, 2))
 		res.end()
 	})
@@ -125,26 +131,26 @@ module.exports.getMessage = function (req: api.Request & swaggerTools.Swagger20R
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        return
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
     }
 
-    //capture search in variable
     const id = req.swagger.params.id.value;
-    //if there is a search, match with database docs that belong to that user and put them in array.
-    //returned items must belong to the user AND match what was searched in any field belonging to that doc
+
     db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
-            res.status(OK)
+            res.status(api.OK)
             res.send(JSON.stringify(data))
             res.end()
         }
         else {
-            res.status(NotFound)
+            res.status(api.NotFound)
             res.send(JSON.stringify({ message: `Message does not exist for ${id}` }, null, 2))
             res.end()
         }
     }).catch((err) => {
-        res.status(InternalServerError)
+        res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         res.end()
     })
@@ -157,32 +163,36 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        return
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
     }
 
-    //capture search in variable
     const id = req.swagger.params.id.value;
 
     db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
-            res.status(OK)
-            res.send(JSON.stringify(data))
-            res.end()
+            if (data.creator.equals(req.session.userid) || req.session.admin) {
+                res.status(api.OK)
+                res.send(JSON.stringify(data))
+                return res.end()
+            }
+            else {
+                res.status(api.Forbidden)
+                res.send(JSON.stringify({ message: `Only admins or the creator can modify a message`}))
+                return res.end()
+            }
         }
         else {
-            res.status(NotFound)
+            res.status(api.NotFound)
             res.send(JSON.stringify({ message: `Message does not exist for ${id}` }, null, 2))
-            res.end()
+            return res.end()
         }
     }).catch((err) => {
-        res.status(InternalServerError)
+        res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-        res.end()
+        return res.end()
     })
-
-    res.status(InternalServerError)
-    res.send(JSON.stringify({ message: inspect(new Error("Not Implemented")) }, null, 2))
-    res.end()
 }
 
 module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger20Request<DeleteMessagePayload>, res: any, next: any) {
@@ -192,8 +202,8 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        res.status(InternalServerError)
-        res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
         return res.end()
     }
 
@@ -204,7 +214,7 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
 		// see if we didn't find a message
 		if (!msg) {
-			res.status(InternalServerError)
+			res.status(api.InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message not found")) }, null, 2))
 			return res.end()
 		}
@@ -213,16 +223,16 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 		if (msg.creator.equals(req.session.userid) || req.session.admin) {
 			db.messages.deleteOne( msg );
 
-			res.status(OK)
+			res.status(api.OK)
 			res.send(JSON.stringify([], null, 2))
 			return res.end()
 		} else {
-			res.status(InternalServerError)
+			res.status(api.InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
 			return res.end()
 		}
 	}).catch((err) => {
-        res.status(InternalServerError)
+        res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         return res.end()
     })
@@ -236,7 +246,15 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
     res.setHeader('Content-Type', 'application/json')
 
     if (!req.session) {
-        return
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
+    }
+
+    if (!req.session.userid) {
+        res.status(api.Forbidden)
+        res.send(JSON.stringify({ message: inspect(new Error("You must be logged in to use post messages.")) }, null, 2))
+        return res.end()
     }
 
     //message to insert into db
@@ -247,26 +265,26 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
         creator: new mongodb.ObjectID(req.session.userid)
     }
 
-    //if there is a search, match with database docs that belong to that user and put them in array.
-    //returned items must belong to the user AND match what was searched in any field belonging to that doc
     db.messages.insertOne(newMessage).then((result) => {
         if (result) {
             db.messages.findOne({'_id': new mongodb.ObjectID(result.insertedId)}).then((newObject) => {
+                res.status(api.OK)
                 res.send(JSON.stringify(newObject))
-                res.end()
+                return res.end()
+            }).catch((err) => {
+                res.status(api.InternalServerError)
+                res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+                return res.end()
             })
-
         }
         else {
-            res.status(InternalServerError)
+            res.status(api.InternalServerError)
             res.send(JSON.stringify(result))
-            res.end()
+            return res.end()
         }
     }).catch((err) => {
-        res.status(InternalServerError)
+        res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-        res.end()
+        return res.end()
     })
-
-
 }

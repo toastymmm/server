@@ -542,6 +542,9 @@
 		"UserInfo": {
 			"type": "object",
 			"properties": {
+				"username": {
+					"type": "string"
+				},
 				"email": {
 					"type": "string"
 				},
@@ -565,26 +568,28 @@
 				},
 				"accountCreated": {
 					"type": "string",
-					"format": "date"
+					"format": "date-time"
 				},
 				"lastLogin": {
 					"type": "string",
-					"format": "date"
+					"format": "date-time"
 				},
 				"admin": {
 					"type": "boolean"
 				}
 			},
 			"required": [
+				"username",
 				"email",
 				"banned",
 				"warned",
 				"numReports",
 				"numWarnings",
+				"messageCreatedCount",
+				"messageDiscoveredCount",
 				"accountCreated",
 				"lastLogin",
-				"messageCreatedCount",
-				"messageDiscoveredCount"
+				"admin"
 			]
 		},
 		"UserList": {
