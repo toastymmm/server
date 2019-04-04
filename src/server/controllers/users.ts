@@ -156,7 +156,7 @@ module.exports.users = function (req: api.Request & swaggerTools.Swagger20Reques
     if (!req.session.admin) {
         res.status(api.Forbidden)
         res.send(JSON.stringify({ message: inspect(new Error("Only admins can see the user list")) }, null, 2))
-        res.end()
+        return res.end()
     }
 
     db.users.find({}).toArray().then((data) => {
@@ -176,6 +176,6 @@ module.exports.users = function (req: api.Request & swaggerTools.Swagger20Reques
     }).catch((err) => {
         res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-        res.end()
+        return res.end()
     })
 }
