@@ -15,6 +15,11 @@ interface SignupPayload {
     [paramName: string]: swaggerTools.SwaggerRequestParameter<UserInfo> | undefined;
 }
 
+interface LoginPayload {
+	userinfo: swaggerTools.SwaggerRequestParameter<UserInfo>
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<UserInfo> | undefined;
+}
+
 // Make sure this matches the Swagger.json body parameter for the /users API
 interface UsersPayload {
     [paramName: string]: undefined;
@@ -75,62 +80,31 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 	})
 }
 
-module.exports.userLogin = function (req: any, res: any, next: any) {
-    // print out the params
+module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Request<LoginPayload>, res: any, next: any) {
     console.log(inspect(req.swagger.params))
     res.setHeader('Content-Type', 'application/json')
 
-    // These should always be filled out because of the swagger validation, but we should still
-    // probably check them.
-    if (req.swagger.params.userinfo.value.username && req.swagger.params.userinfo.value.password) {
-        db.users.findOne({ 'username': req.swagger.params.userinfo.value.username }).then((user) => {
-            var bcrypt = require('bcryptjs');
+	/* alias sent params */
+	const sent_username = req.swagger.params.userinfo.value.username;
+	const sent_password = req.swagger.params.userinfo.value.password;
 
-            if (user != null) {
-                var hash = user.password;
-                var success = bcrypt.compare(req.swagger.params.userinfo.value.password, hash);
+	db.users.findOne({username: sent_username}).then((user) => {
+		if (user && user.password == sent_password) {
+			if (req.session) {
+				req.session.username = sent_username
+				req.session.userid = ""+user._id
+				req.session.admin = user.admin
+			}
 
-				console.log(hash + " " + req.swagger.params.userinfo.value.password);
-				console.log("success = " + success);
-
-                if (success) {
-                    req.swagger.params.userinfo.value.password = hash;
-                }
-            }
-
-            db.users.findOne(req.swagger.params.userinfo.value).then((user) => {
-                if (user) {
-                    if (req.session) {
-                        req.session.username = req.swagger.params.userinfo.value.username
-                        req.session.userid = user._id
-                        req.session.admin = user.admin
-                    }
-
-                    res.status(api.OK)
-                    res.send(JSON.stringify({ message: "It worked!" }, null, 2))
-                    res.end()
-                }
-                else {
-                    res.status(api.BadRequest)
-                    res.send(JSON.stringify({ message: "Username and password did not match any known user, your hash is: " }, null, 2))
-                    res.end()
-                }
-            }).catch((err) => {
-                res.status(api.InternalServerError)
-                res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-                res.end()
-            })
-        }).catch((err) => {
-            res.status(api.InternalServerError)
-            res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-            res.end()
-        })
-    }
-    else {
-        res.status(api.BadRequest)
-        res.send(JSON.stringify({ message: "Username and password are required" }, null, 2))
-        res.end()
-    }
+			res.status(api.OK)
+			res.send(JSON.stringify({message: "All good broseph. You're in."}))
+			res.end()
+		} else {
+			res.status(api.InternalServerError)
+			res.send(JSON.stringify({message: "Error: username or password doesn't match."}))
+			res.end()
+		}
+	})
 }
 
 module.exports.userLogout = function (req: any, res: any, next: any) {
@@ -147,7 +121,7 @@ module.exports.userLogout = function (req: any, res: any, next: any) {
 
     res.setHeader('Content-Type', 'application/json')
     res.status(api.OK)
-    res.send(JSON.stringify({ message: `Logged out user: ${username} ${userid}` }, null, 2))
+    res.send(JSON.stringify({ message: "Logged out user: ${username}" }, null, 2))
     res.end()
 }
 
