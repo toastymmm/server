@@ -5,6 +5,7 @@ import swaggerTools = require('swagger-tools')
 import db = require('../db')
 import api = require('../api')
 import UserInfo = db.UserInfo
+import mongodb = require('mongodb')
 
 const inspect = (input: any) => util.inspect(input, false, Infinity, true)
 
@@ -20,52 +21,58 @@ interface UsersPayload {
 }
 
 module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Request<SignupPayload>, res: any, next: any) {
-    // print out the params
     console.log(inspect(req.swagger.params))
     res.setHeader('Content-Type', 'application/json')
 
-    // These should always be filled out because of the swagger validation, but we should still
-    // probably check them.
-    if (req.swagger.params.userinfo.value.username && req.swagger.params.userinfo.value.password) {
-        db.users.findOne({ 'username': req.swagger.params.userinfo.value.username }).then((user) => {
-            if (user) {
-                res.status(api.BadRequest)
-                res.send(JSON.stringify({ message: `Username ${req.swagger.params.userinfo.value.username} is already in use.` }, null, 2))
-                res.end()
-            }
-            else {
-                var bcrypt = require('bcryptjs');
-                var salt = bcrypt.genSaltSync(10);
-                var hash = bcrypt.hashSync(req.swagger.params.userinfo.value.password, salt);
+	/* alias sent params */
+	const sent_username = req.swagger.params.userinfo.value.username;
+	const sent_password = req.swagger.params.userinfo.value.password;
 
-                req.swagger.params.userinfo.value.password = hash;
+	/* first check if user exists */
+	db.users.findOne({'username' : sent_username}).then((user) => {
+		if (user) {
+			res.status(api.OK)
+			res.send(JSON.stringify({message: "Username already in use."}))
+			res.end()
+		} else {
 
-                db.users.insertOne(req.swagger.params.userinfo.value).then((writeOpResult) => {
-                    if (req.session) {
-                        req.session.username = req.swagger.params.userinfo.value.username
-                        req.session.userid = writeOpResult.insertedId.toHexString()
-                    }
+			/* do all the fields for new user. */
+			const new_user_to_make = {
+				_id: new mongodb.ObjectID(),
+				username: sent_username,
+				password: sent_password,
+				admin: false,
+				email: "",
+				banned: false,
+				warned: false,
+				numReports: 0,
+				numWarnings: 0,
+				messageCreatedCount: 0,
+				messageDiscoveredCount: 0,
+				accountCreated: "",
+				lastLogin: ""
+			}
 
-                    res.status(api.OK)
-                    res.send(JSON.stringify({ message: "It worked!" }, null, 2))
-                    res.end()
-                }).catch((err) => {
-                    res.status(api.InternalServerError)
-                    res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-                    res.end()
-                })
-            }
-        }).catch((err) => {
-            res.status(api.InternalServerError)
-            res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-            res.end()
-        })
-    }
-    else {
-        res.status(api.BadRequest)
-        res.send(JSON.stringify({ message: "Username and password are required" }, null, 2))
-        res.end()
-    }
+			/* attempt to insert new user */
+			db.users.insertOne(new_user_to_make).then((success) => {
+				if (success) {
+					if (req.session) {
+						req.session.username = new_user_to_make.username;
+						req.session.userid = ""+new_user_to_make._id;
+						req.session.admin = new_user_to_make.admin;
+					}
+
+					res.status(api.OK)
+					res.send(JSON.stringify({message: "Yeet brochacho. New user yote."}))
+					res.end()
+				} else {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({message: "Error occurred. Rip in peace."}))
+					res.end()
+				}
+			})
+		}
+	})
 }
 
 module.exports.userLogin = function (req: any, res: any, next: any) {
@@ -82,6 +89,9 @@ module.exports.userLogin = function (req: any, res: any, next: any) {
             if (user != null) {
                 var hash = user.password;
                 var success = bcrypt.compare(req.swagger.params.userinfo.value.password, hash);
+
+				console.log(hash + " " + req.swagger.params.userinfo.value.password);
+				console.log("success = " + success);
 
                 if (success) {
                     req.swagger.params.userinfo.value.password = hash;
