@@ -82,7 +82,7 @@
 								},
 								"password": {
 									"type": "string",
-									"example": "password"
+									"example": "$2a$10$xh3LdNOsFwzCSga4yAJ0oekXaVpMCqCfmZOlCehVX/z0MLFIb2ac2"
 								}
 							}
 						}
