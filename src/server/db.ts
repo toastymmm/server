@@ -26,10 +26,17 @@ namespace Database {
         creator: mongodb.ObjectID
     }
 
+    export interface Favorite {
+        _id: mongodb.ObjectID,
+        messageId: mongodb.ObjectID,
+        userId: mongodb.ObjectID
+    }
+
     export var client:mongodb.MongoClient
     export var db:mongodb.Db
     export var users:mongodb.Collection<UserInfo>
     export var messages:mongodb.Collection<MessageFeature>
+    export var favorites:mongodb.Collection<Favorite>
 
     export async function connectToMongo():Promise<mongodb.Db> {
         if ( this.db ) return Promise.resolve(this.db)
@@ -42,6 +49,7 @@ namespace Database {
             this.db = this.client.db("messageInABottle")
             this.users = this.db.collection('users')
             this.messages = this.db.collection('messages')
+            this.favorites = this.db.collection('favorites')
             return this.db
         })
     }
