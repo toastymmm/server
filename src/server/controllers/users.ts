@@ -7,6 +7,8 @@ import api = require('../api')
 import UserInfo = db.UserInfo
 import mongodb = require('mongodb')
 
+import bcrypt = require('bcryptjs')
+
 const inspect = (input: any) => util.inspect(input, false, Infinity, true)
 
 // Make sure this matches the Swagger.json body parameter for the /signup API
@@ -33,75 +35,87 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 	const sent_username = req.swagger.params.userinfo.value.username;
 	const sent_password = req.swagger.params.userinfo.value.password;
 
-	/* first check if user exists */
-	db.users.findOne({'username' : sent_username}).then((user) => {
-		if (user) {
-			res.status(api.OK)
-			res.send(JSON.stringify({message: "Username already in use."}))
-			res.end()
-		} else {
+	bcrypt.hash(sent_password, 10).then((password_hash) => {
+		/* first check if user exists */
+		db.users.findOne({ 'username': sent_username }).then((user) => {
+			if (user) {
+				res.status(api.Forbidden)
+				res.send(JSON.stringify({ message: "Username already in use." }))
+				res.end()
+			} else {
 
-			/* do all the fields for new user. */
-			const new_user_to_make = {
-				_id: new mongodb.ObjectID(),
-				username: sent_username,
-				password: sent_password,
-				admin: false,
-				email: "",
-				banned: false,
-				warned: false,
-				numReports: 0,
-				numWarnings: 0,
-				messageCreatedCount: 0,
-				messageDiscoveredCount: 0,
-				accountCreated: "",
-				lastLogin: ""
-			}
-
-			/* attempt to insert new user */
-			db.users.insertOne(new_user_to_make).then((success) => {
-				if (success) {
-					if (req.session) {
-						req.session.username = new_user_to_make.username;
-						req.session.userid = ""+new_user_to_make._id;
-						req.session.admin = new_user_to_make.admin;
-					}
-
-					res.status(api.OK)
-					res.send(JSON.stringify({message: "Yeet brochacho. New user yote."}))
-					res.end()
-				} else {
-					res.status(api.InternalServerError)
-					res.send(JSON.stringify({message: "Error occurred. Rip in peace."}))
-					res.end()
+				/* do all the fields for new user. */
+				const new_user_to_make = {
+					_id: new mongodb.ObjectID(),
+					username: sent_username,
+					password: password_hash,
+					admin: false,
+					email: "",
+					banned: false,
+					warned: false,
+					numReports: 0,
+					numWarnings: 0,
+					messageCreatedCount: 0,
+					messageDiscoveredCount: 0,
+					accountCreated: "",
+					lastLogin: ""
 				}
-			})
-		}
+
+				/* attempt to insert new user */
+				db.users.insertOne(new_user_to_make).then((success) => {
+					if (success) {
+						if (req.session) {
+							req.session.username = new_user_to_make.username;
+							req.session.userid = "" + new_user_to_make._id;
+							req.session.admin = new_user_to_make.admin;
+						}
+
+						res.status(api.OK)
+						res.send(JSON.stringify({ message: "Yeet brochacho. New user yote." }))
+						res.end()
+					} else {
+						res.status(api.InternalServerError)
+						res.send(JSON.stringify({ message: "Error occurred. Rip in peace." }))
+						res.end()
+					}
+				})
+			}
+		})
 	})
 }
 
 module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Request<LoginPayload>, res: any, next: any) {
     console.log(inspect(req.swagger.params))
-    res.setHeader('Content-Type', 'application/json')
+	res.setHeader('Content-Type', 'application/json')
+
+	const bad_user_pass_msg = "Error: username or password doesn't match."
 
 	/* alias sent params */
 	const sent_username = req.swagger.params.userinfo.value.username;
 	const sent_password = req.swagger.params.userinfo.value.password;
 
 	db.users.findOne({username: sent_username}).then((user) => {
-		if (user && user.password == sent_password) {
-			if (req.session) {
-				req.session.username = sent_username
-				req.session.userid = ""+user._id
-				req.session.admin = user.admin
-			}
+		if (user) {
+			bcrypt.compare(sent_password, user.password).then((is_correct_password) => {
+				if (is_correct_password) {
+					if (req.session) {
+						req.session.username = sent_username
+						req.session.userid = ""+user._id
+						req.session.admin = user.admin
+					}
 
-			res.status(api.OK)
-			res.send(JSON.stringify({message: "All good broseph. You're in."}))
-			res.end()
+					res.status(api.OK)
+					res.send(JSON.stringify({message: "All good broseph. You're in."}))
+					res.end()
+				} else {
+					res.status(api.Forbidden)
+					res.send(JSON.stringify({message: bad_user_pass_msg}))
+					res.end()
+				}
+			})
 		} else {
 			res.status(api.Forbidden)
-			res.send(JSON.stringify({message: "Error: username or password doesn't match."}))
+			res.send(JSON.stringify({message: bad_user_pass_msg}))
 			res.end()
 		}
 	})
