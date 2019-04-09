@@ -61,6 +61,6 @@ export class MessagesService {
 
   public async deleteMessage(message: Message) {
     this.allMessages.splice(this.allMessages.indexOf(message), 1);
-    await this.http.delete(`http://toastymmm.hopto.org/api/message/${message}`).toPromise();
+    await this.http.delete(`http://toastymmm.hopto.org/api/message/${message.id}`).toPromise();
   }
 }
