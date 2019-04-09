@@ -10,34 +10,24 @@ export class UsersService {
   }
 
   public async getUsers(): Promise<User[]> {
-    return [
-      {
-        id: 1,
-        username: 'Test',
-        created: new Date(),
-        lastLogin: new Date(),
-        messagesCreated: 0,
-        messagesFound: 0,
-        warningCount: 0,
-        reportCount: 0,
-      },
-      {
-        id: 2,
-        username: 'Test 2',
-        created: new Date(),
-        lastLogin: new Date(),
-        messagesCreated: 0,
-        messagesFound: 0,
-        warningCount: 3,
-        reportCount: 0,
-      }
-    ];
+    const users: any = await this.http.get(`http://toastymmm.hopto.org/api/users`).toPromise();
+    return users.map(u => ({
+      id: u._id,
+      username: u.username,
+      created: new Date(u.accountCreated),
+      lastLogin: new Date(u.lastLogin),
+      messagesCreated: u.messagesCreatedCount,
+      messagesFound: u.messagesFoundCount,
+      warningCount: u.numWarnings,
+      reportCount: u.numReports,
+      banned: u.banned,
+    }));
   }
 
   public async warnUser(user: User) {
     user.warningCount++;
 
-    await this.http.patch(`/api/user/${user.id}`, {
+    await this.http.patch(`http://toastymmm.hopto.org/api/user/${user.id}`, {
       warned: true,
     }).toPromise();
   }
@@ -45,7 +35,7 @@ export class UsersService {
   public async banUser(user: User) {
     user.banned = true;
 
-    await this.http.patch(`/api/user/${user.id}`, {
+    await this.http.patch(`http://toastymmm.hopto.org/api/user/${user.id}`, {
       banned: true,
     }).toPromise();
   }

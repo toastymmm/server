@@ -17,7 +17,7 @@ export class AuthService {
   }
 
   public async login(username: string, password: string) {
-    await this.http.post(`/api/userLogin`, {
+    await this.http.post(`http://toastymmm.hopto.org/api/userLogin`, {
       username,
       password,
     }).toPromise();
@@ -26,7 +26,7 @@ export class AuthService {
   }
 
   public async logout() {
-    await this.http.post(`/api/userLogout`, {}).toPromise();
+    await this.http.post(`http://toastymmm.hopto.org/api/userLogout`, {}).toPromise();
     this.isAuthenticated = false;
     this.router.navigate(['login']);
   }

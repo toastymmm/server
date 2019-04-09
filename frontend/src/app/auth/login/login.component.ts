@@ -23,7 +23,7 @@ export class LoginComponent {
       this.loading = true;
       await this.auth.login(this.form.username, this.form.password);
     } catch (e) {
-      this.error = e.message;
+      this.error = e.error ? e.error.message : e.message;
     } finally {
       this.loading = false;
     }
