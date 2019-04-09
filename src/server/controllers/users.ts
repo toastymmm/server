@@ -100,7 +100,7 @@ module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Re
 			res.send(JSON.stringify({message: "All good broseph. You're in."}))
 			res.end()
 		} else {
-			res.status(api.InternalServerError)
+			res.status(api.Forbidden)
 			res.send(JSON.stringify({message: "Error: username or password doesn't match."}))
 			res.end()
 		}
