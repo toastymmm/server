@@ -262,6 +262,30 @@
 				}
 			}
 		},
+		"/messages/me": {
+			"get": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "messagesMyUser",
+				"tags": [
+					"messages"
+				],
+				"description": "Get all messages for currently logged in user.",
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/MessageList"
+						}
+					}
+				}
+			}
+		},
 		"/messages/{userId}": {
 			"get": {
 				"x-swagger-router-controller": "messages",

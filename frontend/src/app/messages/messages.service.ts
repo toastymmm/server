@@ -19,24 +19,15 @@ export class MessagesService {
   }
 
   public async getMessages() {
-    this.allMessages = [
-      {
-        id: 1,
-        text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam a lorem vel ligula cursus tristique. Vestibulum sodales purus neque, non rutrum massa lobortis quis. Mauris bibendum magna leo, ut hendrerit mauris sollicitudin in. Nulla pulvinar, est a convallis tristique, lectus nisi tempus lacus, in malesuada mauris felis ut neque. Ut sit amet lacus orci. Praesent ac elit odio. Sed eget diam id tellus semper porta sit amet vulputate turpis. Nullam non risus quam. Nulla varius interdum nisi.',
-        category: 'Test',
-        date: new Date(),
-        numReports: 0,
-        userId: 1,
-      },
-      {
-        id: 2,
-        text: 'Nulla vestibulum dignissim sagittis. Duis non vehicula elit. Integer porta id dui a hendrerit. Proin vitae diam in risus mattis euismod quis sit amet metus. Sed fringilla est eget turpis ultrices vestibulum. Praesent feugiat imperdiet felis, at facilisis tortor maximus in. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur ut purus vestibulum justo euismod sagittis at id neque. Pellentesque sed nulla quis massa pretium finibus commodo commodo sem. Aenean scelerisque pharetra tellus at condimentum. Mauris scelerisque fermentum pretium. Vivamus mollis finibus placerat. Proin eleifend odio id arcu gravida, lacinia commodo sapien finibus. Nam quis nisl ac lorem suscipit euismod. Praesent augue urna, commodo faucibus facilisis sed, tempus id velit. Aliquam hendrerit mauris sit amet sem dignissim dignissim.',
-        category: 'Test',
-        date: new Date(),
-        numReports: 3,
-        userId: 2,
-      },
-    ];
+    const messages: any = await this.http.get(`http://toastymmm.hopto.org/api/messages`).toPromise();
+    this.allMessages = messages.map(m => ({
+      id: m._id,
+      text: m.feature.properties.text,
+      category: m.feature.properties.category,
+      date: new Date(m.feature.properties.date),
+      numReports: m.feature.properties.numReports,
+      userId: m.creator
+    }));
     this.clearFilter();
   }
 
@@ -56,20 +47,20 @@ export class MessagesService {
 
   public async removeReports(message: Message) {
     message.numReports = 0;
-    await this.http.patch(`/api/message/${message.id}`, {
+    await this.http.patch(`http://toastymmm.hopto.org/api/message/${message.id}`, {
       numReports: 0,
     }).toPromise();
   }
 
   public async editMessage(message: Message, text: string) {
     message.text = text;
-    await this.http.patch(`/api/message/${message.id}`, {
+    await this.http.patch(`http://toastymmm.hopto.org/api/message/${message.id}`, {
       text,
     }).toPromise();
   }
 
   public async deleteMessage(message: Message) {
     this.allMessages.splice(this.allMessages.indexOf(message), 1);
-    await this.http.delete(`/api/message/${message}`).toPromise();
+    await this.http.delete(`http://toastymmm.hopto.org/api/message/${message.id}`).toPromise();
   }
 }

@@ -1,8 +1,8 @@
 export class Message {
-  id: number;
+  id: string;
   text: string;
   category: string;
   date: Date;
   numReports: number;
-  userId: number;
+  userId: string;
 }

@@ -15,7 +15,7 @@
     <clr-dg-action-overflow>
       <button (click)="showMessages(user)" class="action-item">View Messages</button>
       <button (click)="warnUser(user)" class="action-item">Warn</button>
-      <button (click)="banUser(user)" class="action-item">Ban</button>
+      <button (click)="banUser(user)" *ngIf="!user.banned" class="action-item">Ban</button>
     </clr-dg-action-overflow>
     <clr-dg-cell>{{user.username}}</clr-dg-cell>
     <clr-dg-cell>{{user.created | date}}</clr-dg-cell>
