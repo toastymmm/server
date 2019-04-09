@@ -61,8 +61,6 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 					lastLogin: ""
 				}
 
-				console.log("Password hash for " + sent_password + " is " + password_hash);
-
 				/* attempt to insert new user */
 				db.users.insertOne(new_user_to_make).then((success) => {
 					if (success) {
