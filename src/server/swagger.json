@@ -452,14 +452,23 @@
 				}
 			}
 		},
-		"/favorites": {
+		"/favorites/{userId}": {
 			"get": {
-				"x-swagger-router-controller": "messages",
-				"operationId": "favorites",
+				"x-swagger-router-controller": "favorites",
+				"operationId": "getFavorites",
 				"tags": [
 					"favorites"
 				],
 				"description": "Get favorite messages for logged in user.",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"type": "string",
+						"default": "5c78b456fd1441656500d212"
+					}
+				],
 				"responses": {
 					"default": {
 						"description": "Invalid request.",
@@ -476,9 +485,9 @@
 				}
 			}
 		},
-		"/favorites/{id}": {
+		"/favorite/{id}": {
 			"delete": {
-				"x-swagger-router-controller": "messages",
+				"x-swagger-router-controller": "favorites",
 				"operationId": "deleteFavorite",
 				"tags": [
 					"favorite"
@@ -508,8 +517,8 @@
 				}
 			},
 			"post": {
-				"x-swagger-router-controller": "messages",
-				"operationId": "postMessage",
+				"x-swagger-router-controller": "favorites",
+				"operationId": "postFavorite",
 				"tags": [
 					"favorite"
 				],
