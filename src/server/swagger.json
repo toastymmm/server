@@ -543,9 +543,9 @@
 						}
 					},
 					"200": {
-						"description": "Successful request",
+						"description": "Return the favorited favorite",
 						"schema": {
-							"$ref": "#/definitions/Success"
+							"$ref": "#/definitions/Favorite"
 						}
 					}
 				}

@@ -67,7 +67,7 @@ module.exports.postFavorite = function (req: api.Request & swaggerTools.Swagger2
 
     const newFav = {
         messageId : req.swagger.params.favorite.value.messageId,
-        usedId : req.swagger.params.favorite.value.userId
+        userId : req.swagger.params.favorite.value.userId
     }
 
     db.favorites.insertOne(newFav).then((result) => {
