@@ -15,14 +15,37 @@ interface FavoritesPayload {
     [paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
 }
 
-interface PostFavoritePayload {
-    favorite: swaggerTools.SwaggerRequestParameter<Favorite>,
-    [paramName: string]: swaggerTools.SwaggerRequestParameter<Favorite> | undefined;
+interface FavoritesMePayload {
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
 }
 
-interface DeleteMessagePayload {
+interface PostFavoritePayload {
     id: swaggerTools.SwaggerRequestParameter<string>,
     [paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
+interface DeleteFavoritePayload {
+    id: swaggerTools.SwaggerRequestParameter<string>,
+    [paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
+function grab_favorites_by(user_id : string, res : any) {
+	db.favorites.find({ "userId": new mongodb.ObjectID(user_id) }).toArray().then((data) => {
+		if (data) {
+			res.status(api.OK)
+			res.send(JSON.stringify(data))
+			res.end()
+		}
+		else {
+			res.status(api.OK)
+			res.send(JSON.stringify([], null, 2))
+			res.end()
+		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+		res.end()
+	})
 }
 
 module.exports.getFavorites = function (req: api.Request & swaggerTools.Swagger20Request<FavoritesPayload>, res: any, next: any) {
@@ -39,23 +62,22 @@ module.exports.getFavorites = function (req: api.Request & swaggerTools.Swagger2
 
     //capture search in variable
     const id = req.swagger.params.userId.value;
+	grab_favorites_by(id, res)
+}
 
-    db.favorites.find({"userId" : new mongodb.ObjectID(id)}).toArray().then((data) => {
-        if (data) {
-            res.status(api.OK)
-            res.send(JSON.stringify(data))
-            res.end()
-        }
-        else {
-            res.status(api.OK)
-            res.send(JSON.stringify([], null, 2))
-            res.end()
-        }
-    }).catch((err) => {
-        res.status(api.InternalServerError)
-        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-        res.end()
-    })
+module.exports.getFavoritesMe = function (req: api.Request & swaggerTools.Swagger20Request<FavoritesMePayload>, res: any, next: any) {
+
+	console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+	res.setHeader('Content-Type', 'application/json')
+
+	if (!req.session || !req.session.userid) {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+		return res.end()
+	}
+
+	grab_favorites_by(req.session.userid, res)
 }
 
 module.exports.postFavorite = function (req: api.Request & swaggerTools.Swagger20Request<PostFavoritePayload>, res: any, next: any) {
@@ -64,48 +86,57 @@ module.exports.postFavorite = function (req: api.Request & swaggerTools.Swagger2
 
     res.setHeader('Content-Type', 'application/json')
 
-    if (!req.session) {
+	if (!req.session || !req.session.userid) {
         res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
         return res.end()
-    }
+	}
 
-    const newFav = {
-        messageId : req.swagger.params.favorite.value.messageId,
-        userId : req.swagger.params.favorite.value.userId
-    }
+	const message_id = new mongodb.ObjectID(req.swagger.params.id.value)
+	const user_id = new mongodb.ObjectID(req.session.userid)
 
-    db.favorites.insertOne(newFav).then((result) => {
-        if (result) {
-            db.favorites.findOne({'_id': new mongodb.ObjectID(result.insertedId)}).then((newObject) => {
-                res.status(api.OK)
-                res.send(JSON.stringify(newObject))
-                return res.end()
-            }).catch((err) => {
-                res.status(api.InternalServerError)
-                res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-                return res.end()
-            })
-        }
-        else {
-            res.status(api.InternalServerError)
-            res.send(JSON.stringify(result))
-            return res.end()
-        }
-    }).catch((err) => {
-        res.status(api.InternalServerError)
-        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
-        res.end()
-    })
+	const new_favorite = {
+		_id: new mongodb.ObjectID(),
+		messageId : message_id,
+		userId: user_id
+	}
+
+	db.favorites.findOne({messageId : message_id, userId: user_id}).then((fav) => {
+		if (!fav) {
+			db.favorites.insertOne(new_favorite).then((success) => {
+				if (success) {
+					res.status(api.OK)
+					res.send(JSON.stringify({ message: "made new fav", new_favorite}))
+					return res.end()
+				} else {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({ message: "idk"}))
+					return res.end()
+				}
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+				return res.end()
+			})
+		} else {
+			res.status(api.OK)
+			res.send(JSON.stringify({message: "was already fav'd", fav}))
+			return res.end()
+		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+		return res.end()
+	})
 }
 
-module.exports.deleteFavorite = function (req: api.Request & swaggerTools.Swagger20Request<DeleteMessagePayload>, res: any, next: any) {
+module.exports.deleteFavorite = function (req: api.Request & swaggerTools.Swagger20Request<DeleteFavoritePayload>, res: any, next: any) {
 
     console.log(util.inspect(req.swagger.params, false, Infinity, true))
 
     res.setHeader('Content-Type', 'application/json')
 
-    if (!req.session) {
+	if (!req.session || !req.session.userid) {
         res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
         return res.end()
@@ -121,13 +152,19 @@ module.exports.deleteFavorite = function (req: api.Request & swaggerTools.Swagge
 			res.status(api.InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Favorite not found")) }, null, 2))
 			return res.end()
-        }
-        
+		}
+
+		if (!req.session.admin && !fav.userId.equals(req.session.userid)) {
+			res.status(api.Forbidden)
+			res.send(JSON.stringify({ message : "you can't delete someone else's fav"}))
+			return res.end()
+		}
+
         db.favorites.deleteOne( fav );
         res.status(api.OK)
-        res.send(JSON.stringify([], null, 2))
+        res.send(JSON.stringify({ message: "favorite successfully deleted"}, null, 2))
         return res.end()
-		
+
 	}).catch((err) => {
         res.status(api.InternalServerError)
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))

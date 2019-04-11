@@ -82,7 +82,7 @@
 								},
 								"password": {
 									"type": "string",
-									"example": "$2a$10$xh3LdNOsFwzCSga4yAJ0oekXaVpMCqCfmZOlCehVX/z0MLFIb2ac2"
+									"example": "password"
 								}
 							}
 						}
@@ -452,6 +452,30 @@
 				}
 			}
 		},
+		"/favorites/me": {
+			"get": {
+				"x-swagger-router-controller": "favorites",
+				"operationId": "getFavoritesMe",
+				"tags": [
+					"favorites"
+				],
+				"description": "Get favorite messages for logged in user.",
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/FavoriteList"
+						}
+					}
+				}
+			}
+		},
 		"/favorites/{userId}": {
 			"get": {
 				"x-swagger-router-controller": "favorites",
@@ -459,7 +483,7 @@
 				"tags": [
 					"favorites"
 				],
-				"description": "Get favorite messages for logged in user.",
+				"description": "Get favorite messages for a certain user",
 				"parameters": [
 					{
 						"name": "userId",
@@ -479,13 +503,43 @@
 					"200": {
 						"description": "return array of message objects",
 						"schema": {
-							"$ref": "#/definitions/MessageList"
+							"$ref": "#/definitions/FavoriteList"
 						}
 					}
 				}
 			}
 		},
 		"/favorite/{id}": {
+			"post": {
+				"x-swagger-router-controller": "favorites",
+				"operationId": "postFavorite",
+				"tags": [
+					"favorite"
+				],
+				"description": "Mark a message as one of a user's favorites",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			},
 			"delete": {
 				"x-swagger-router-controller": "favorites",
 				"operationId": "deleteFavorite",
@@ -512,40 +566,6 @@
 						"description": "Successful request",
 						"schema": {
 							"$ref": "#/definitions/Success"
-						}
-					}
-				}
-			}
-		},
-		"/favorite": {
-			"post": {
-				"x-swagger-router-controller": "favorites",
-				"operationId": "postFavorite",
-				"tags": [
-					"favorite"
-				],
-				"description": "Create a new favorite.",
-				"parameters": [
-					{
-						"in": "body",
-						"name": "favorite",
-						"required": true,
-						"schema": {
-							"$ref": "#/definitions/Favorite"
-						}
-					}
-				],
-				"responses": {
-					"default": {
-						"description": "Invalid request",
-						"schema": {
-							"$ref": "#/definitions/Error"
-						}
-					},
-					"200": {
-						"description": "Return the favorited favorite",
-						"schema": {
-							"$ref": "#/definitions/Favorite"
 						}
 					}
 				}
@@ -793,6 +813,12 @@
 					"$ref": "#/definitions/ObjectID"
 				}
 			]
+		},
+		"FavoriteList": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/Favorite"
+			}
 		},
 		"Success": {
 			"properties": {
