@@ -82,7 +82,7 @@
 								},
 								"password": {
 									"type": "string",
-									"example": "password"
+									"example": "$2a$10$xh3LdNOsFwzCSga4yAJ0oekXaVpMCqCfmZOlCehVX/z0MLFIb2ac2"
 								}
 							}
 						}
@@ -485,7 +485,7 @@
 				}
 			}
 		},
-		"/favorite/{id}": {
+		"/favorite": {
 			"delete": {
 				"x-swagger-router-controller": "favorites",
 				"operationId": "deleteFavorite",
@@ -495,10 +495,12 @@
 				"description": "Delete a favorite.",
 				"parameters": [
 					{
-						"in": "path",
-						"name": "id",
+						"in": "body",
+						"name": "favorite",
 						"required": true,
-						"type": "string"
+						"schema": {
+							"$ref": "#/definitions/Favorite"
+						}
 					}
 				],
 				"responses": {
@@ -525,10 +527,12 @@
 				"description": "Create a new favorite.",
 				"parameters": [
 					{
-						"in": "path",
-						"name": "id",
+						"in": "body",
+						"name": "favorite",
 						"required": true,
-						"type": "string"
+						"schema": {
+							"$ref": "#/definitions/Favorite"
+						}
 					}
 				],
 				"responses": {
@@ -539,9 +543,9 @@
 						}
 					},
 					"200": {
-						"description": "Successful request",
+						"description": "Return the favorited favorite",
 						"schema": {
-							"$ref": "#/definitions/Success"
+							"$ref": "#/definitions/Favorite"
 						}
 					}
 				}
@@ -753,6 +757,36 @@
 					},
 					"required": [
 						"creator"
+					]
+				},
+				{
+					"$ref": "#/definitions/ObjectID"
+				}
+			]
+		},
+		"Favorite": {
+			"type": "object",
+			"allOf": [
+				{
+					"type": "object",
+					"properties": {
+						"messageId": {
+							"$ref": "#/definitions/ObjectID"
+						}
+					},
+					"required": [
+						"messageId"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"userId": {
+							"$ref": "#/definitions/ObjectID"
+						}
+					},
+					"required": [
+						"userId"
 					]
 				},
 				{
