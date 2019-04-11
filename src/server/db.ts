@@ -37,9 +37,9 @@ namespace Database {
     }
 
     export interface Favorite {
-        _id: mongodb.ObjectID,
+        _id?: mongodb.ObjectID,
         messageId: mongodb.ObjectID,
-        userId: mongodb.ObjectID
+        userId?: mongodb.ObjectID
     }
 
     export var client:mongodb.MongoClient
