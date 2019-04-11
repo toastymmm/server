@@ -485,7 +485,7 @@
 				}
 			}
 		},
-		"/favorite": {
+		"/favorite/{id}": {
 			"delete": {
 				"x-swagger-router-controller": "favorites",
 				"operationId": "deleteFavorite",
@@ -495,12 +495,10 @@
 				"description": "Delete a favorite.",
 				"parameters": [
 					{
-						"in": "body",
-						"name": "favorite",
+						"in": "path",
+						"name": "id",
 						"required": true,
-						"schema": {
-							"$ref": "#/definitions/Favorite"
-						}
+						"type": "string"
 					}
 				],
 				"responses": {
@@ -517,7 +515,9 @@
 						}
 					}
 				}
-			},
+			}
+		},
+		"/favorite": {
 			"post": {
 				"x-swagger-router-controller": "favorites",
 				"operationId": "postFavorite",
