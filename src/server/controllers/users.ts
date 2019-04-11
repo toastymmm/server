@@ -57,8 +57,8 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 					numWarnings: 0,
 					messageCreatedCount: 0,
 					messageDiscoveredCount: 0,
-					accountCreated: "",
-					lastLogin: ""
+					accountCreated: new Date().toISOString(),
+					lastLogin: new Date().toISOString()
 				}
 
 				/* attempt to insert new user */
