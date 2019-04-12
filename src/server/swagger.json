@@ -679,6 +679,46 @@
 				"admin"
 			]
 		},
+		"UserInfoOptional": {
+			"type": "object",
+			"properties": {
+				"username": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string"
+				},
+				"banned": {
+					"type": "boolean"
+				},
+				"warned": {
+					"type": "boolean"
+				},
+				"numWarnings": {
+					"type": "number"
+				},
+				"numReports": {
+					"type": "number"
+				},
+				"messageCreatedCount": {
+					"type": "number"
+				},
+				"messageDiscoveredCount": {
+					"type": "number"
+				},
+				"accountCreated": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"lastLogin": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"admin": {
+					"type": "boolean"
+				}
+			}
+		},
 		"UserList": {
 			"type": "array",
 			"items": {
@@ -690,6 +730,17 @@
 			"allOf": [
 				{
 					"$ref": "#/definitions/UserInfo"
+				},
+				{
+					"$ref": "#/definitions/ObjectID"
+				}
+			]
+		},
+		"UserOptional": {
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/definitions/UserInfoOptional"
 				},
 				{
 					"$ref": "#/definitions/ObjectID"
