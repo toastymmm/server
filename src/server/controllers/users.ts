@@ -102,6 +102,9 @@ module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Re
 						req.session.username = sent_username
 						req.session.userid = ""+user._id
 						req.session.admin = user.admin
+
+						res.cookie('username', req.session.username)
+						res.cookie('userid', req.session.userid)
 					}
 
 					res.status(api.OK)

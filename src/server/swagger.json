@@ -192,6 +192,36 @@
 						}
 					}
 				}
+			},
+			"get": {
+				"x-swagger-router-controller": "users",
+				"operationId": "getUser",
+				"tags": [
+					"users"
+				],
+				"description": "Get a user with whatever properties you are allowed to see.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/UserOptional"
+						}
+					}
+				}
 			}
 		},
 		"/messages": {
