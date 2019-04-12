@@ -27,6 +27,12 @@ interface UsersPayload {
     [paramName: string]: undefined;
 }
 
+// Make sure this matches the Swagger.json body parameter for the /users API
+interface GetUserPayload {
+	userId: swaggerTools.SwaggerRequestParameter<string>
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
 module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Request<SignupPayload>, res: any, next: any) {
     console.log(inspect(req.swagger.params))
     res.setHeader('Content-Type', 'application/json')
@@ -172,6 +178,46 @@ module.exports.users = function (req: api.Request & swaggerTools.Swagger20Reques
         else {
             res.status(api.InternalServerError)
             res.send(JSON.stringify({ message: inspect(new Error(`No user array. ${data}`)) }, null, 2))
+            return res.end()
+        }
+    }).catch((err) => {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        return res.end()
+    })
+}
+
+module.exports.getUser = function (req: api.Request & swaggerTools.Swagger20Request<GetUserPayload>, res: any, next: any) {
+
+    console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+    res.setHeader('Content-Type', 'application/json')
+
+    if (!req.session) {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
+    }
+
+    db.users.findOne({_id: new mongodb.ObjectID(req.swagger.params.userId.value)}).then((user) => {
+        if (user) {
+			res.status(api.OK)
+			if (req.session.admin || req.session.userid == req.swagger.params.userId.value) {
+				delete user.password;
+				res.send(JSON.stringify(user));
+				return res.end()
+			}
+			else {
+				res.send(JSON.stringify({
+					_id: user._id,
+					username: user.username
+				}));
+				return res.end()
+			}
+        }
+        else {
+            res.status(api.NotFound)
+            res.send(JSON.stringify({ message: inspect(new Error(`No user with the id. ${req.swagger.params.userId.value}`)) }, null, 2))
             return res.end()
         }
     }).catch((err) => {
