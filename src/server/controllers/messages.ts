@@ -27,9 +27,9 @@ interface GetMessagePayload {
 // Make sure this matches the Swagger.json body parameter for the /message GET API
 interface PatchMessagePayload {
     id: swaggerTools.SwaggerRequestParameter<string>,
-    message: swaggerTools.SwaggerRequestParameter<Message>,
+    message: swaggerTools.SwaggerRequestParameter<MessageFeature>,
     [paramName: string]: swaggerTools.SwaggerRequestParameter<string>
-        | swaggerTools.SwaggerRequestParameter<Message>
+        | swaggerTools.SwaggerRequestParameter<MessageFeature>
         | undefined;
 }
 
@@ -186,13 +186,25 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
     }
 
     const id = req.swagger.params.id.value;
-
+    const message = req.swagger.params.message.value.feature;
+    //verify the message exists
     db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
+            //verify admin or creator is modifying message
             if (data.creator.equals(req.session.userid) || req.session.admin) {
-                res.status(api.OK)
-                res.send(JSON.stringify(data))
-                return res.end()
+                //update
+                db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
+                {$set : {feature : message}});
+                //load updated message to be sent back
+                db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((updated) =>{
+                    res.status(api.OK)
+                    res.send(JSON.stringify(updated))
+                    return res.end()
+                }).catch((err) =>{
+                    res.status(api.InternalServerError)
+                    res.send(JSON.stringify({message: inspect(err)},null,2))
+                    return res.end()
+                })           
             }
             else {
                 res.status(api.Forbidden)
@@ -225,7 +237,8 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
     }
 
     // capture search in variable
-	const id = req.swagger.params.id.value;
+    const id = req.swagger.params.id.value;
+    
 
 	db.messages.findOne({ "_id": new mongodb.ObjectID(id)}).then((msg) => {
 
