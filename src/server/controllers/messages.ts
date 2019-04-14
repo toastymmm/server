@@ -195,7 +195,7 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
                 //update
                 return db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
                     {$set : {feature : message}}, (err, result) => {
-                        
+
                     if (err) {
                         res.status(api.InternalServerError)
                         res.send(JSON.stringify({message: inspect(err)},null,2))
@@ -211,7 +211,7 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
                         res.status(api.InternalServerError)
                         res.send(JSON.stringify({message: inspect(err)},null,2))
                         return res.end()
-                    })           
+                    })
                 });
             }
             else {
@@ -246,7 +246,7 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
     // capture search in variable
     const id = req.swagger.params.id.value;
-    
+
 
 	db.messages.findOne({ "_id": new mongodb.ObjectID(id)}).then((msg) => {
 
@@ -259,11 +259,15 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
 		/* delete message if we own it or if we are admin */
 		if (msg.creator.equals(req.session.userid) || req.session.admin) {
-			db.messages.deleteOne( msg );
-
-			res.status(api.OK)
-			res.send(JSON.stringify([], null, 2))
-			return res.end()
+			db.messages.deleteOne( msg ).then((success) => {
+				res.status(api.OK)
+				res.send(JSON.stringify([], null, 2))
+				return res.end()
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({ message: inspect(err) }));
+				return res.end()
+			})
 		} else {
 			res.status(api.InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))

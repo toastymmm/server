@@ -92,9 +92,21 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 						res.send(JSON.stringify({ message: "Error occurred. Rip in peace." }))
 						res.end()
 					}
+				}).catch ((err) => {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({message: inspect(err)}));
+					res.end()
 				})
 			}
+		}).catch((err) => {
+			res.status(api.InternalServerError)
+			res.send(JSON.stringify({ message: inspect(err) }));
+			res.end()
 		})
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }));
+		res.end()
 	})
 }
 
@@ -129,12 +141,20 @@ module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Re
 					res.send(JSON.stringify({message: bad_user_pass_msg}))
 					res.end()
 				}
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({ message: inspect(err) }));
+				res.end()
 			})
 		} else {
 			res.status(api.Forbidden)
 			res.send(JSON.stringify({message: bad_user_pass_msg}))
 			res.end()
 		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }));
+		res.end()
 	})
 }
 
@@ -271,7 +291,7 @@ module.exports.patchUser = function (req: api.Request & swaggerTools.Swagger20Re
 						res.status(api.InternalServerError)
 						res.send(JSON.stringify({message: inspect(err)},null,2))
 						return res.end()
-					})           
+					})
 				})
             }
             else {
