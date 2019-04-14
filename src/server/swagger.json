@@ -171,10 +171,10 @@
 					},
 					{
 						"in": "body",
-						"name": "user",
+						"name": "userInfo",
 						"required": true,
 						"schema": {
-							"$ref": "#/definitions/User"
+							"$ref": "#/definitions/UserInfoOptional"
 						}
 					}
 				],

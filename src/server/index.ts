@@ -115,3 +115,7 @@ app.listen(port, () => {
         console.log(`Server connected to MongoDB...`)
     })
 })
+
+process.on('uncaughtException', function (err) {
+    console.log(err)
+})

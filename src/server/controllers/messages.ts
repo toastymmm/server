@@ -193,18 +193,26 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
             //verify admin or creator is modifying message
             if (data.creator.equals(req.session.userid) || req.session.admin) {
                 //update
-                db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
-                {$set : {feature : message}});
-                //load updated message to be sent back
-                db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((updated) =>{
-                    res.status(api.OK)
-                    res.send(JSON.stringify(updated))
-                    return res.end()
-                }).catch((err) =>{
-                    res.status(api.InternalServerError)
-                    res.send(JSON.stringify({message: inspect(err)},null,2))
-                    return res.end()
-                })           
+                return db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
+                    {$set : {feature : message}}, (err, result) => {
+                        
+                    if (err) {
+                        res.status(api.InternalServerError)
+                        res.send(JSON.stringify({message: inspect(err)},null,2))
+                        return res.end()
+                    }
+
+                    //load updated message to be sent back
+                    db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((updated) =>{
+                        res.status(api.OK)
+                        res.send(JSON.stringify(updated))
+                        return res.end()
+                    }).catch((err) =>{
+                        res.status(api.InternalServerError)
+                        res.send(JSON.stringify({message: inspect(err)},null,2))
+                        return res.end()
+                    })           
+                });
             }
             else {
                 res.status(api.Forbidden)
