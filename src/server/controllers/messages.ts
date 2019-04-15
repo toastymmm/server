@@ -8,6 +8,7 @@ import MessageFeature = db.MessageFeature
 import api = require('../api')
 import turf = require('@turf/turf')
 import mongodb = require('mongodb')
+import { feature } from '@turf/turf';
 
 const inspect = (input: any) => util.inspect(input, false, Infinity, false)
 
@@ -47,6 +48,12 @@ interface PostMessagePayload {
 
 interface MessagesUserIdPayload {
 	userId: swaggerTools.SwaggerRequestParameter<string>,
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
+/* for [POST] /report/{id} endpoint */
+interface ReportMessagePayload {
+	messageId: swaggerTools.SwaggerRequestParameter<string>,
 	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
 }
 
@@ -329,4 +336,51 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         return res.end()
     })
+}
+
+module.exports.reportMessage = function (req: api.Request & swaggerTools.Swagger20Request<ReportMessagePayload>, res: any, next: any) {
+	console.log(util.inspect(req.swagger.params, false, Infinity, true))
+	res.setHeader('Content-Type', 'application/json')
+
+	// check logged in
+	if (!req.session || !req.session.userid) {
+		res.status(api.Forbidden)
+		res.send(JSON.stringify({message: "User must be logged in to report."}))
+		return res.end()
+	}
+
+	const message_id = new mongodb.ObjectID(req.swagger.params.messageId.value);
+
+	// find the message or freak out
+	db.messages.findOne({_id : message_id}).then((found_message) => {
+		if (found_message) {
+			const ref = found_message.feature.properties
+			const times_reported = (ref ? ref.numReports : 0) + 1
+
+			db.messages.updateOne({_id : message_id},
+			{$inc : { "feature.properties.numReports" : 1 }}).then((success) => {
+				if (success) {
+					res.status(api.OK)
+					res.send(JSON.stringify({message : "Reported message. Message has been reported " + times_reported + " times"}))
+					return res.end()
+				} else {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({message: "Could not report message."}))
+					return res.end()
+				}
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({message: "Failed to report message."}))
+				return res.end()
+			})
+		} else {
+			res.status(api.InternalServerError)
+			res.send(JSON.stringify({message: "Message not found."}))
+			return res.end()
+		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({message : inspect(err)}))
+		return res.end()
+	})
 }

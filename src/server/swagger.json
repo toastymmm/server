@@ -600,6 +600,38 @@
 					}
 				}
 			}
+		},
+		"/report/{messageId}" : {
+			"post": {
+				"x-swagger-router-controller": "messages",
+				"operationId": "reportMessage",
+				"tags": [
+					"message"
+				],
+				"description": "Reports a message",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "messageId",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			}
 		}
 	},
 	"definitions": {
