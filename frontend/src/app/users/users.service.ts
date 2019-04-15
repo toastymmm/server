@@ -29,6 +29,7 @@ export class UsersService {
 
     await this.http.patch(`http://toastymmm.hopto.org/api/user/${user.id}`, {
       warned: true,
+      numWarnings: user.warningCount, // TODO: race condition, should be handled server-side
     }).toPromise();
   }
 

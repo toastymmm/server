@@ -55,7 +55,11 @@ export class MessagesService {
   public async editMessage(message: Message, text: string) {
     message.text = text;
     await this.http.patch(`http://toastymmm.hopto.org/api/message/${message.id}`, {
-      text,
+      feature: {
+        properties: {
+          text
+        }
+      }
     }).toPromise();
   }
 
