@@ -398,7 +398,7 @@
 						"name": "message",
 						"required": true,
 						"schema": {
-							"$ref": "#/definitions/Message"
+							"$ref": "#/definitions/MessageFeatureOptional"
 						}
 					}
 				],
@@ -874,6 +874,70 @@
 				"properties",
 				"geometry"
 			]
+		},
+		"MessageFeatureOptional": {
+			"type": "object",
+			"properties": {
+				"type": {
+					"type": "string",
+					"enum": [
+						"Feature"
+					]
+				},
+				"properties": {
+					"type": "object",
+					"properties": {
+						"text": {
+							"type": "string",
+							"example": "I am in charge of my life"
+						},
+						"category": {
+							"type": "string",
+							"enum": [
+								"Confidence",
+								"Entrepreneurship",
+								"Forgiveness",
+								"Health",
+								"Success",
+								"Self-worth",
+								"Productivity",
+								"Challenges",
+								"Money",
+								"Love",
+								"Leadership",
+								"Happiness",
+								"Gratitude",
+								"Breaking Bad Habits",
+								"General"
+							],
+							"example": "Confidence"
+						},
+						"date": {
+							"type": "string",
+							"format": "date-time",
+							"example": "2019-03-27T00:28:19.958Z"
+						},
+						"numReports": {
+							"type": "number",
+							"example": 0
+						}
+					}
+				},
+				"geometry": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": [
+								"Point"
+							]
+						},
+						"coordinates": {
+							"$ref": "#/definitions/LongLatArray"
+						}
+					}
+				}
+			}
 		},
 		"Message": {
 			"type": "object",
