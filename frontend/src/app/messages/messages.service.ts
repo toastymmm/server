@@ -48,7 +48,9 @@ export class MessagesService {
   public async removeReports(message: Message) {
     message.numReports = 0;
     await this.http.patch(`http://toastymmm.hopto.org/api/message/${message.id}`, {
-      numReports: 0,
+      properties: {
+        numReports: 0,
+      }
     }).toPromise();
   }
 
