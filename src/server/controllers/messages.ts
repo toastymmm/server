@@ -3,12 +3,11 @@
 import util = require('util')
 import swaggerTools = require('swagger-tools')
 import db = require('../db')
-import Message = db.Message
 import MessageFeature = db.MessageFeature
 import api = require('../api')
 import turf = require('@turf/turf')
 import mongodb = require('mongodb')
-import { feature } from '@turf/turf';
+import _ = require('lodash')
 
 const inspect = (input: any) => util.inspect(input, false, Infinity, false)
 
@@ -28,9 +27,9 @@ interface GetMessagePayload {
 // Make sure this matches the Swagger.json body parameter for the /message GET API
 interface PatchMessagePayload {
     id: swaggerTools.SwaggerRequestParameter<string>,
-    message: swaggerTools.SwaggerRequestParameter<MessageFeature>,
+    message: swaggerTools.SwaggerRequestParameter<Partial<MessageFeature>>,
     [paramName: string]: swaggerTools.SwaggerRequestParameter<string>
-        | swaggerTools.SwaggerRequestParameter<MessageFeature>
+        | swaggerTools.SwaggerRequestParameter<Partial<MessageFeature>>
         | undefined;
 }
 
@@ -193,15 +192,17 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
     }
 
     const id = req.swagger.params.id.value;
-    const message = req.swagger.params.message.value.feature;
+    const feature = req.swagger.params.message.value;
     //verify the message exists
     db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
             //verify admin or creator is modifying message
             if (data.creator.equals(req.session.userid) || req.session.admin) {
                 //update
+                _.merge(data.feature, feature);
+
                 return db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
-                    {$set : {feature : message}}, (err, result) => {
+                    {$set : {feature : data.feature}}, (err, result) => {
 
                     if (err) {
                         res.status(api.InternalServerError)

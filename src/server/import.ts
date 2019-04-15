@@ -185,7 +185,8 @@ async function go() {
 		user.accountCreated = new Date().toISOString()
 		user.lastLogin = new Date().toISOString()
         return await db.users.insertOne(user)
-    }))
+	}))
+	messages.length = 20;
     const points = turf.randomPoint(messages.length, {bbox: [-81.20022743940353,28.600748350532783, -81.19752377271652, 28.602848915574334]})
 	await Promise.all(messages.map(async (message, idx) => {
         let feature = <Feature<Point, Message>>points.features[idx]
