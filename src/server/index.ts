@@ -43,9 +43,11 @@ app.use((req, res, next) => {
     // convert user session into user cookie
     if (apiRequest.session && apiRequest.session.username) {
         res.cookie('username', apiRequest.session.username)
+        res.cookie('userid', apiRequest.session.userid)
     }
     else {
         res.clearCookie('username')
+        res.clearCookie('userid')
     }
     next();
 });
@@ -112,4 +114,8 @@ app.listen(port, () => {
     db.connectToMongo().then(() => {
         console.log(`Server connected to MongoDB...`)
     })
+})
+
+process.on('uncaughtException', function (err) {
+    console.log(err)
 })

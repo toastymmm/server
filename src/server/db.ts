@@ -4,11 +4,12 @@ import turf = require('@turf/turf')
 namespace Database {
 
     export interface ObjectID {
-        _id: string
+        _id: string | mongodb.ObjectID
     }
 
+    export type User = ObjectID & UserInfo;
+
     export interface UserInfo {
-        _id: mongodb.ObjectID
         username: string,
         password: string,
         admin: boolean,
@@ -29,7 +30,7 @@ namespace Database {
         date: Date,
         numReports: number
     }
-    
+
     export interface MessageFeature {
         _id?: mongodb.ObjectID
         feature: turf.helpers.Feature<turf.helpers.Point, Message>
@@ -37,14 +38,14 @@ namespace Database {
     }
 
     export interface Favorite {
-        _id?: mongodb.ObjectID,
+        _id: mongodb.ObjectID,
         messageId: mongodb.ObjectID,
-        userId?: mongodb.ObjectID
+        userId: mongodb.ObjectID
     }
 
     export var client:mongodb.MongoClient
     export var db:mongodb.Db
-    export var users:mongodb.Collection<UserInfo>
+    export var users:mongodb.Collection<User>
     export var messages:mongodb.Collection<MessageFeature>
     export var favorites:mongodb.Collection<Favorite>
 

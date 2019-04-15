@@ -3,10 +3,11 @@
 import gulp = require('gulp');
 import rimraf = require('rimraf');
 import yaml = require('js-yaml');
+import path = require('path');
 import fs = require('fs');
 import ts = require('gulp-typescript');
 import sourcemaps = require('gulp-sourcemaps')
-import process = require('child_process')
+import cp = require('child_process')
 
 // Load settings from settings.yml
 const { PATHS } = loadConfig();
@@ -21,17 +22,12 @@ gulp.task('clean', gulp.series(clean))
 gulp.task('backend', gulp.series(typescript, copy))
 
 gulp.task('npm install frontend', function frontend(cb) {
-  process.spawnSync('npm', ['install'], { cwd: './frontend' })
-  cb()
-})
-
-gulp.task('npm install frontend', function frontend(cb) {
-  process.spawnSync('npm', ['install'], { cwd: './frontend' })
+  cp.spawnSync('npm', ['install'], { shell: true, cwd: path.join('.', 'frontend') })
   cb()
 })
 
 gulp.task('ng build frontend', function frontend(cb) {
-  process.spawnSync('ng', ['build'], { cwd: './frontend' })
+  cp.spawnSync('ng', ['build'], { shell: true, cwd: path.join('.', 'frontend') })
   cb()
 })
 

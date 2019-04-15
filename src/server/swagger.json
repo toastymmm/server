@@ -82,7 +82,7 @@
 								},
 								"password": {
 									"type": "string",
-									"example": "$2a$10$xh3LdNOsFwzCSga4yAJ0oekXaVpMCqCfmZOlCehVX/z0MLFIb2ac2"
+									"example": "password"
 								}
 							}
 						}
@@ -171,10 +171,10 @@
 					},
 					{
 						"in": "body",
-						"name": "user",
+						"name": "userInfo",
 						"required": true,
 						"schema": {
-							"$ref": "#/definitions/User"
+							"$ref": "#/definitions/UserInfoOptional"
 						}
 					}
 				],
@@ -189,6 +189,36 @@
 						"description": "Successful request",
 						"schema": {
 							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			},
+			"get": {
+				"x-swagger-router-controller": "users",
+				"operationId": "getUser",
+				"tags": [
+					"users"
+				],
+				"description": "Get a user with whatever properties you are allowed to see.",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "userId",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/UserOptional"
 						}
 					}
 				}
@@ -452,6 +482,30 @@
 				}
 			}
 		},
+		"/favorites/me": {
+			"get": {
+				"x-swagger-router-controller": "favorites",
+				"operationId": "getFavoritesMe",
+				"tags": [
+					"favorites"
+				],
+				"description": "Get favorite messages for logged in user.",
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "return array of message objects",
+						"schema": {
+							"$ref": "#/definitions/FavoriteList"
+						}
+					}
+				}
+			}
+		},
 		"/favorites/{userId}": {
 			"get": {
 				"x-swagger-router-controller": "favorites",
@@ -459,7 +513,7 @@
 				"tags": [
 					"favorites"
 				],
-				"description": "Get favorite messages for logged in user.",
+				"description": "Get favorite messages for a certain user",
 				"parameters": [
 					{
 						"name": "userId",
@@ -479,13 +533,43 @@
 					"200": {
 						"description": "return array of message objects",
 						"schema": {
-							"$ref": "#/definitions/MessageList"
+							"$ref": "#/definitions/FavoriteList"
 						}
 					}
 				}
 			}
 		},
 		"/favorite/{id}": {
+			"post": {
+				"x-swagger-router-controller": "favorites",
+				"operationId": "postFavorite",
+				"tags": [
+					"favorite"
+				],
+				"description": "Mark a message as one of a user's favorites",
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"default": {
+						"description": "Invalid request.",
+						"schema": {
+							"$ref": "#/definitions/Error"
+						}
+					},
+					"200": {
+						"description": "Successful request",
+						"schema": {
+							"$ref": "#/definitions/Success"
+						}
+					}
+				}
+			},
 			"delete": {
 				"x-swagger-router-controller": "favorites",
 				"operationId": "deleteFavorite",
@@ -517,35 +601,33 @@
 				}
 			}
 		},
-		"/favorite": {
+		"/report/{messageId}" : {
 			"post": {
-				"x-swagger-router-controller": "favorites",
-				"operationId": "postFavorite",
+				"x-swagger-router-controller": "messages",
+				"operationId": "reportMessage",
 				"tags": [
-					"favorite"
+					"message"
 				],
-				"description": "Create a new favorite.",
+				"description": "Reports a message",
 				"parameters": [
 					{
-						"in": "body",
-						"name": "favorite",
+						"in": "path",
+						"name": "messageId",
 						"required": true,
-						"schema": {
-							"$ref": "#/definitions/Favorite"
-						}
+						"type": "string"
 					}
 				],
 				"responses": {
 					"default": {
-						"description": "Invalid request",
+						"description": "Invalid request.",
 						"schema": {
 							"$ref": "#/definitions/Error"
 						}
 					},
 					"200": {
-						"description": "Return the favorited favorite",
+						"description": "Successful request",
 						"schema": {
-							"$ref": "#/definitions/Favorite"
+							"$ref": "#/definitions/Success"
 						}
 					}
 				}
@@ -629,6 +711,46 @@
 				"admin"
 			]
 		},
+		"UserInfoOptional": {
+			"type": "object",
+			"properties": {
+				"username": {
+					"type": "string"
+				},
+				"email": {
+					"type": "string"
+				},
+				"banned": {
+					"type": "boolean"
+				},
+				"warned": {
+					"type": "boolean"
+				},
+				"numWarnings": {
+					"type": "number"
+				},
+				"numReports": {
+					"type": "number"
+				},
+				"messageCreatedCount": {
+					"type": "number"
+				},
+				"messageDiscoveredCount": {
+					"type": "number"
+				},
+				"accountCreated": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"lastLogin": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"admin": {
+					"type": "boolean"
+				}
+			}
+		},
 		"UserList": {
 			"type": "array",
 			"items": {
@@ -640,6 +762,17 @@
 			"allOf": [
 				{
 					"$ref": "#/definitions/UserInfo"
+				},
+				{
+					"$ref": "#/definitions/ObjectID"
+				}
+			]
+		},
+		"UserOptional": {
+			"type": "object",
+			"allOf": [
+				{
+					"$ref": "#/definitions/UserInfoOptional"
 				},
 				{
 					"$ref": "#/definitions/ObjectID"
@@ -793,6 +926,12 @@
 					"$ref": "#/definitions/ObjectID"
 				}
 			]
+		},
+		"FavoriteList": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/Favorite"
+			}
 		},
 		"Success": {
 			"properties": {

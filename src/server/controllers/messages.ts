@@ -8,6 +8,7 @@ import MessageFeature = db.MessageFeature
 import api = require('../api')
 import turf = require('@turf/turf')
 import mongodb = require('mongodb')
+import { feature } from '@turf/turf';
 
 const inspect = (input: any) => util.inspect(input, false, Infinity, false)
 
@@ -27,9 +28,9 @@ interface GetMessagePayload {
 // Make sure this matches the Swagger.json body parameter for the /message GET API
 interface PatchMessagePayload {
     id: swaggerTools.SwaggerRequestParameter<string>,
-    message: swaggerTools.SwaggerRequestParameter<Message>,
+    message: swaggerTools.SwaggerRequestParameter<MessageFeature>,
     [paramName: string]: swaggerTools.SwaggerRequestParameter<string>
-        | swaggerTools.SwaggerRequestParameter<Message>
+        | swaggerTools.SwaggerRequestParameter<MessageFeature>
         | undefined;
 }
 
@@ -47,6 +48,12 @@ interface PostMessagePayload {
 
 interface MessagesUserIdPayload {
 	userId: swaggerTools.SwaggerRequestParameter<string>,
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
+/* for [POST] /report/{id} endpoint */
+interface ReportMessagePayload {
+	messageId: swaggerTools.SwaggerRequestParameter<string>,
 	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
 }
 
@@ -186,13 +193,33 @@ module.exports.patchMessage = function (req: api.Request & swaggerTools.Swagger2
     }
 
     const id = req.swagger.params.id.value;
-
+    const message = req.swagger.params.message.value.feature;
+    //verify the message exists
     db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((data) => {
         if (data) {
+            //verify admin or creator is modifying message
             if (data.creator.equals(req.session.userid) || req.session.admin) {
-                res.status(api.OK)
-                res.send(JSON.stringify(data))
-                return res.end()
+                //update
+                return db.messages.updateOne({ '_id' : new mongodb.ObjectID(id)},
+                    {$set : {feature : message}}, (err, result) => {
+
+                    if (err) {
+                        res.status(api.InternalServerError)
+                        res.send(JSON.stringify({message: inspect(err)},null,2))
+                        return res.end()
+                    }
+
+                    //load updated message to be sent back
+                    db.messages.findOne({'_id': new mongodb.ObjectID(id)}).then((updated) =>{
+                        res.status(api.OK)
+                        res.send(JSON.stringify(updated))
+                        return res.end()
+                    }).catch((err) =>{
+                        res.status(api.InternalServerError)
+                        res.send(JSON.stringify({message: inspect(err)},null,2))
+                        return res.end()
+                    })
+                });
             }
             else {
                 res.status(api.Forbidden)
@@ -225,7 +252,8 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
     }
 
     // capture search in variable
-	const id = req.swagger.params.id.value;
+    const id = req.swagger.params.id.value;
+
 
 	db.messages.findOne({ "_id": new mongodb.ObjectID(id)}).then((msg) => {
 
@@ -238,11 +266,15 @@ module.exports.deleteMessage = function (req: api.Request & swaggerTools.Swagger
 
 		/* delete message if we own it or if we are admin */
 		if (msg.creator.equals(req.session.userid) || req.session.admin) {
-			db.messages.deleteOne( msg );
-
-			res.status(api.OK)
-			res.send(JSON.stringify([], null, 2))
-			return res.end()
+			db.messages.deleteOne( msg ).then((success) => {
+				res.status(api.OK)
+				res.send(JSON.stringify([], null, 2))
+				return res.end()
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({ message: inspect(err) }));
+				return res.end()
+			})
 		} else {
 			res.status(api.InternalServerError)
 			res.send(JSON.stringify({ message: inspect(new Error("Message does not belong to user.")) }, null, 2))
@@ -304,4 +336,51 @@ module.exports.postMessage = function (req: api.Request & swaggerTools.Swagger20
         res.send(JSON.stringify({ message: inspect(err) }, null, 2))
         return res.end()
     })
+}
+
+module.exports.reportMessage = function (req: api.Request & swaggerTools.Swagger20Request<ReportMessagePayload>, res: any, next: any) {
+	console.log(util.inspect(req.swagger.params, false, Infinity, true))
+	res.setHeader('Content-Type', 'application/json')
+
+	// check logged in
+	if (!req.session || !req.session.userid) {
+		res.status(api.Forbidden)
+		res.send(JSON.stringify({message: "User must be logged in to report."}))
+		return res.end()
+	}
+
+	const message_id = new mongodb.ObjectID(req.swagger.params.messageId.value);
+
+	// find the message or freak out
+	db.messages.findOne({_id : message_id}).then((found_message) => {
+		if (found_message) {
+			const ref = found_message.feature.properties
+			const times_reported = (ref ? ref.numReports : 0) + 1
+
+			db.messages.updateOne({_id : message_id},
+			{$inc : { "feature.properties.numReports" : 1 }}).then((success) => {
+				if (success) {
+					res.status(api.OK)
+					res.send(JSON.stringify({message : "Reported message. Message has been reported " + times_reported + " times"}))
+					return res.end()
+				} else {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({message: "Could not report message."}))
+					return res.end()
+				}
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({message: "Failed to report message."}))
+				return res.end()
+			})
+		} else {
+			res.status(api.InternalServerError)
+			res.send(JSON.stringify({message: "Message not found."}))
+			return res.end()
+		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({message : inspect(err)}))
+		return res.end()
+	})
 }

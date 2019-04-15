@@ -4,6 +4,7 @@ import util = require('util')
 import swaggerTools = require('swagger-tools')
 import db = require('../db')
 import api = require('../api')
+import User = db.User
 import UserInfo = db.UserInfo
 import mongodb = require('mongodb')
 
@@ -27,6 +28,19 @@ interface UsersPayload {
     [paramName: string]: undefined;
 }
 
+// Make sure this matches the Swagger.json body parameter for the /users API
+interface GetUserPayload {
+	userId: swaggerTools.SwaggerRequestParameter<string>
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | undefined;
+}
+
+// Make sure this matches the Swagger.json body parameter for the /users API
+interface PatchUserPayload {
+	userId: swaggerTools.SwaggerRequestParameter<string>
+	userInfo: swaggerTools.SwaggerRequestParameter<Partial<UserInfo>>
+	[paramName: string]: swaggerTools.SwaggerRequestParameter<string> | swaggerTools.SwaggerRequestParameter<Partial<UserInfo>>| undefined;
+}
+
 module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Request<SignupPayload>, res: any, next: any) {
     console.log(inspect(req.swagger.params))
     res.setHeader('Content-Type', 'application/json')
@@ -45,7 +59,7 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 			} else {
 
 				/* do all the fields for new user. */
-				const new_user_to_make = {
+				const new_user_to_make:User = {
 					_id: new mongodb.ObjectID(),
 					username: sent_username,
 					password: password_hash,
@@ -57,8 +71,8 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 					numWarnings: 0,
 					messageCreatedCount: 0,
 					messageDiscoveredCount: 0,
-					accountCreated: "",
-					lastLogin: ""
+					accountCreated: new Date().toISOString(),
+					lastLogin: new Date().toISOString()
 				}
 
 				/* attempt to insert new user */
@@ -78,9 +92,21 @@ module.exports.signup = function (req: api.Request & swaggerTools.Swagger20Reque
 						res.send(JSON.stringify({ message: "Error occurred. Rip in peace." }))
 						res.end()
 					}
+				}).catch ((err) => {
+					res.status(api.InternalServerError)
+					res.send(JSON.stringify({message: inspect(err)}));
+					res.end()
 				})
 			}
+		}).catch((err) => {
+			res.status(api.InternalServerError)
+			res.send(JSON.stringify({ message: inspect(err) }));
+			res.end()
 		})
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }));
+		res.end()
 	})
 }
 
@@ -102,6 +128,9 @@ module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Re
 						req.session.username = sent_username
 						req.session.userid = ""+user._id
 						req.session.admin = user.admin
+
+						res.cookie('username', req.session.username)
+						res.cookie('userid', req.session.userid)
 					}
 
 					res.status(api.OK)
@@ -112,12 +141,20 @@ module.exports.userLogin = function (req: api.Request & swaggerTools.Swagger20Re
 					res.send(JSON.stringify({message: bad_user_pass_msg}))
 					res.end()
 				}
+			}).catch((err) => {
+				res.status(api.InternalServerError)
+				res.send(JSON.stringify({ message: inspect(err) }));
+				res.end()
 			})
 		} else {
 			res.status(api.Forbidden)
 			res.send(JSON.stringify({message: bad_user_pass_msg}))
 			res.end()
 		}
+	}).catch((err) => {
+		res.status(api.InternalServerError)
+		res.send(JSON.stringify({ message: inspect(err) }));
+		res.end()
 	})
 }
 
@@ -169,6 +206,103 @@ module.exports.users = function (req: api.Request & swaggerTools.Swagger20Reques
         else {
             res.status(api.InternalServerError)
             res.send(JSON.stringify({ message: inspect(new Error(`No user array. ${data}`)) }, null, 2))
+            return res.end()
+        }
+    }).catch((err) => {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        return res.end()
+    })
+}
+
+module.exports.getUser = function (req: api.Request & swaggerTools.Swagger20Request<GetUserPayload>, res: any, next: any) {
+
+    console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+    res.setHeader('Content-Type', 'application/json')
+
+    if (!req.session) {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
+    }
+
+    db.users.findOne({_id: new mongodb.ObjectID(req.swagger.params.userId.value)}).then((user) => {
+        if (user) {
+			res.status(api.OK)
+			if (req.session.admin || req.session.userid == req.swagger.params.userId.value) {
+				delete user.password;
+				res.send(JSON.stringify(user));
+				return res.end()
+			}
+			else {
+				res.send(JSON.stringify({
+					_id: user._id,
+					username: user.username
+				}));
+				return res.end()
+			}
+        }
+        else {
+            res.status(api.NotFound)
+            res.send(JSON.stringify({ message: inspect(new Error(`No user with the id. ${req.swagger.params.userId.value}`)) }, null, 2))
+            return res.end()
+        }
+    }).catch((err) => {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(err) }, null, 2))
+        return res.end()
+    })
+}
+
+module.exports.patchUser = function (req: api.Request & swaggerTools.Swagger20Request<PatchUserPayload>, res: any, next: any) {
+
+    console.log(util.inspect(req.swagger.params, false, Infinity, true))
+
+    res.setHeader('Content-Type', 'application/json')
+
+    if (!req.session) {
+        res.status(api.InternalServerError)
+        res.send(JSON.stringify({ message: inspect(new Error("No session object exists.")) }, null, 2))
+        return res.end()
+    }
+
+    const userId = req.swagger.params.userId.value;
+    const userInfo = req.swagger.params.userInfo.value;
+    //verify the user exists
+    db.users.findOne({'_id': new mongodb.ObjectID(userId)}).then((data) => {
+        if (data) {
+            //verify admin or creator is modifying message
+            if (new mongodb.ObjectID(data._id).equals(req.session.userid) || req.session.admin) {
+                //update
+                return db.users.updateOne({ '_id' : new mongodb.ObjectID(userId)}, {$set : userInfo}, (err, result) => {
+					if (err) {
+						res.status(api.InternalServerError)
+						res.send(JSON.stringify({message: inspect(err)},null,2))
+						return res.end()
+					}
+
+	                //load updated message to be sent back
+					return db.messages.findOne({'_id': new mongodb.ObjectID(userId)}).then((updated) =>{
+						res.status(api.OK)
+						res.send(JSON.stringify(updated))
+						return res.end()
+					}).catch((err) => {
+						res.status(api.InternalServerError)
+						res.send(JSON.stringify({message: inspect(err)},null,2))
+						return res.end()
+					})
+				})
+            }
+            else {
+                res.status(api.Forbidden)
+                res.send(JSON.stringify({ message: `Only admins or the user themselves can modify a user`}))
+                return res.end()
+            }
+        }
+        else {
+            res.status(api.NotFound)
+            res.send(JSON.stringify({ message: `User does not exist with id ${userId}` }, null, 2))
             return res.end()
         }
     }).catch((err) => {
